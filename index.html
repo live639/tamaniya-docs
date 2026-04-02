@@ -99,7 +99,7 @@ main{padding:1.5rem;overflow-y:auto;}
 .stv{font-size:2.1rem;font-weight:700;color:var(--w);letter-spacing:-.03em;}
 .stn{color:var(--g1);font-size:.72rem;margin-top:3px;}
 
-.tbox{background:var(--s1);border:1px solid var(--s3);border-radius:16px;overflow:hidden;margin-bottom:1.5rem;}.tbox table{min-width:600px;}.tbox{overflow-x:auto;}
+.tbox{background:var(--s1);border:1px solid var(--s3);border-radius:16px;overflow-x:auto;overflow-y:hidden;margin-bottom:1.5rem;-webkit-overflow-scrolling:touch;}.tbox table{min-width:650px;}
 .tboxh{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.2rem;border-bottom:1px solid var(--s3);gap:.7rem;flex-wrap:wrap;}
 .tboxt{font-weight:600;font-size:.92rem;}
 .srch{background:var(--s2);border:1px solid var(--s3);color:var(--w);padding:6px 12px;border-radius:8px;font-size:.83rem;direction:rtl;width:165px;}
@@ -219,7 +219,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 @media(max-width:700px){.layout{grid-template-columns:1fr;}nav{display:none;}.stats,.cgrid,.ugrid{grid-template-columns:repeat(2,1fr);}.rptgrid{grid-template-columns:1fr;}}
 .print-header{display:none;}
 @media print{
-  nav,.header,.phact,.btn,.tabs,.srch,.rptUserTabs,.rptProgTabs,.toast{display:none!important;}
+  nav,.header,.phact,.btn,.tabs,.srch,.toast,.stats,.overlay{display:none!important;}
   body,html{background:#fff!important;color:#000!important;}
   .layout{display:block!important;}
   .page{display:none!important;}
@@ -229,11 +229,22 @@ tr:hover td{background:rgba(255,255,255,.02);}
   .print-header span{font-size:.85rem;color:#555;}
   .rptgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;}
   .rptcard{border:1px solid #ddd;border-radius:8px;padding:.8rem;break-inside:avoid;}
-  .tbox{break-inside:avoid;border:1px solid #ddd;border-radius:8px;padding:.8rem;margin-top:.8rem;}
+  .tbox{break-inside:avoid;border:1px solid #ddd;border-radius:8px;padding:.8rem;margin-top:.8rem;overflow:visible!important;}
   table{width:100%;border-collapse:collapse;}
   th,td{border:1px solid #ccc;padding:5px 8px;font-size:.78rem;text-align:right;}
   th{background:#f5f5f5;font-weight:600;}
   .seclbl{font-weight:700;margin:1rem 0 .4rem;font-size:.9rem;}
+  /* طباعة قسم معيّن */
+  [data-print-section="user"] .rptgrid,
+  [data-print-section="user"] #rptProgBox,
+  [data-print-section="user"] #rptProgTabs,
+  [data-print-section="user"] #summBody,
+  [data-print-section="user"] .tbox:last-child{display:none!important;}
+  [data-print-section="prog"] .rptgrid,
+  [data-print-section="prog"] #rptUserBox,
+  [data-print-section="prog"] #rptUserTabs,
+  [data-print-section="prog"] #summBody,
+  [data-print-section="prog"] .tbox:last-child{display:none!important;}
 }
 </style>
 <!-- Firebase -->
@@ -395,16 +406,22 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div class="rptcard"><div class="rptlbl">حسب المهمة</div><div id="rptTask"></div></div>
         <div class="rptcard"><div class="rptlbl">نشاط الفريق</div><div id="rptTeam"></div></div>
       </div>
-      <div class="seclbl">تفاصيل كل منفذ</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;">
+        <div class="seclbl" style="margin:0;">تفاصيل كل منفذ</div>
+        <button class="btn btn-g btn-s" onclick="printSection('user')" style="font-size:.75rem;">🖨️ PDF</button>
+      </div>
       <div class="tabs" id="rptUserTabs" style="margin-bottom:1rem;"></div>
-      <div class="tbox">
+      <div class="tbox" id="rptUserBox">
         <div class="tboxh"><div class="tboxt" id="rptUserTitle">كل المهام</div><span id="rptUserCount" style="color:var(--g2);font-size:.8rem;"></span></div>
         <table><thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th></tr></thead><tbody id="rptUserBody"></tbody></table>
         <div class="empty" id="rptUserEmpty" style="display:none;"><div class="emptyico">📭</div><div class="emptytxt">لا توجد مهام</div></div>
       </div>
-      <div class="seclbl" style="margin-top:1rem;">تفاصيل كل منتج</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;">
+        <div class="seclbl" style="margin:0;">تفاصيل كل منتج</div>
+        <button class="btn btn-g btn-s" onclick="printSection('prog')" style="font-size:.75rem;">🖨️ PDF</button>
+      </div>
       <div class="tabs" id="rptProgTabs" style="margin-bottom:1rem;"></div>
-      <div class="tbox">
+      <div class="tbox" id="rptProgBox">
         <div class="tboxh"><div class="tboxt" id="rptProgTitle">كل المنتجات</div><span id="rptProgCount" style="color:var(--g2);font-size:.8rem;"></span></div>
         <table><thead><tr><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th></tr></thead><tbody id="rptProgBody"></tbody></table>
         <div class="empty" id="rptProgEmpty" style="display:none;"><div class="emptyico">📭</div><div class="emptytxt">لا توجد مهام</div></div>
@@ -1270,9 +1287,18 @@ function eq(s){return s.replace(/'/g,"\\'").replace(/"/g,'&quot;');}
 function printReport() {
   if(currentRole!=='admin'){toast('ليس لديك صلاحية','err');return;}
   document.getElementById('printDate').textContent = 'تاريخ الطباعة: ' + new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+  document.body.removeAttribute('data-print-section');
   showPage('reports');
   renderReports();
   setTimeout(function(){ window.print(); }, 300);
+}
+
+function printSection(type) {
+  document.getElementById('printDate').textContent = 'تاريخ الطباعة: ' + new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+  document.body.setAttribute('data-print-section', type);
+  showPage('reports');
+  renderReports();
+  setTimeout(function(){ window.print(); document.body.removeAttribute('data-print-section'); }, 300);
 }
 
 function exportExcel() {
