@@ -385,8 +385,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="ph">
         <div><div class="phtitle">التقارير</div></div>
         <div class="phact" style="gap:8px;">
-          <button class="btn btn-g admin-only" id="exportAllBtn" onclick="exportAll()">⬇️ تصدير CSV</button>
-          <button class="btn btn-p admin-only" id="printBtn" onclick="printReport()">🖨️ طباعة</button>
+          <button class="btn btn-p admin-only" onclick="printReport()">🖨️ PDF / طباعة</button>
+          <button class="btn btn-g admin-only" onclick="exportExcel()">📊 Excel</button>
         </div>
       </div>
       <div class="rptgrid">
@@ -1240,14 +1240,35 @@ function printReport() {
   setTimeout(function(){ window.print(); }, 300);
 }
 
-function exportAll() {
+function exportExcel() {
   if(currentRole!=='admin'){toast('ليس لديك صلاحية','err');return;}
-  function toCSV(h,rows){return'\uFEFF'+h.join(',')+'\n'+rows.map(function(r){return r.map(function(v){return'"'+((v||'').toString().replace(/"/g,'""'))+'"';}).join(',');}).join('\n');}
-  [{name:'المهام',h:['المنتج','المهمة','التاريخ','منفذو المهمة','المعدات','ملاحظات'],r:S.broadcasts.map(function(b){return[b.name,b.type,b.date,exStr(b),eqStr(b),b.notes];})},
-   {name:'المعدات',h:['الاسم','الفئة','الحالة','الرقم التسلسلي','تاريخ الشراء','ملاحظات'],r:S.equipment.map(function(e){return[e.name,e.cat,e.status,e.serial,e.date,e.notes];})},
-   {name:'الفريق',h:['الاسم','ملاحظات'],r:S.team.map(function(t){return[t.name,t.notes];})}
-  ].forEach(function(f,i){setTimeout(function(){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([toCSV(f.h,f.r)],{type:'text/csv;charset=utf-8'}));var nameMap={'المهام':'tasks','المعدات':'equipment','الفريق':'team'};a.download='t8-'+(nameMap[f.name]||f.name)+'-'+new Date().toISOString().slice(0,10)+'.csv';a.click();},i*400);});
-  toast('جاري التصدير...');
+  var sheets = [
+    {name:'المهام', h:['المنتج','المهمة','التاريخ','منفذو المهمة','المعدات','ملاحظات'],
+     r:S.broadcasts.map(function(b){return[b.name,b.type,b.date,exStr(b),eqStr(b),b.notes||''];})},
+    {name:'المعدات', h:['الاسم','الفئة','الحالة','الرقم التسلسلي','تاريخ الشراء','ملاحظات'],
+     r:S.equipment.map(function(e){return[e.name,e.cat,e.status,e.serial||'',e.date||'',e.notes||''];})},
+    {name:'الفريق', h:['الاسم','ملاحظات'],
+     r:S.team.map(function(t){return[t.name,t.notes||''];})}
+  ];
+  var xml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<?mso-application progid="Excel.Sheet"?>\n' +
+    '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n' +
+    '<Styles><Style ss:ID="hdr"><Font ss:Bold="1"/><Interior ss:Color="#4ade80" ss:Pattern="Solid"/></Style></Styles>\n';
+  sheets.forEach(function(s) {
+    xml += '<Worksheet ss:Name="'+s.name+'"><Table>\n';
+    xml += '<Row>' + s.h.map(function(h){return '<Cell ss:StyleID="hdr"><Data ss:Type="String">'+h+'</Data></Cell>';}).join('') + '</Row>\n';
+    s.r.forEach(function(row) {
+      xml += '<Row>' + row.map(function(v){return '<Cell><Data ss:Type="String">'+((v||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;'))+'</Data></Cell>';}).join('') + '</Row>\n';
+    });
+    xml += '</Table></Worksheet>\n';
+  });
+  xml += '</Workbook>';
+  var blob = new Blob([xml], {type:'application/vnd.ms-excel'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tamaniya-report-' + new Date().toISOString().slice(0,10) + '.xls';
+  a.click();
+  toast('تم تصدير Excel ✓');
 }
 
 var toastT;
