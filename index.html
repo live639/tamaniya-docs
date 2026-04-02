@@ -330,18 +330,18 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
       <div class="tbox">
         <div class="tboxh"><div class="tboxt">آخر المهام الموثقة</div><input class="srch" placeholder="🔍 بحث..." oninput="filterTbl(this.value,'dtbody')"></div>
-        <table><thead><tr><th>البرنامج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات</th><th></th></tr></thead><tbody id="dtbody"></tbody></table>
+        <table><thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات</th><th></th></tr></thead><tbody id="dtbody"></tbody></table>
         <div class="empty" id="dempty"><div class="emptyico">📋</div><div class="emptytxt">لا توجد مهام موثقة بعد</div></div>
       </div>
     </div>
 
     <div class="page" id="page-tasks">
       <div class="ph"><div><div class="phtitle">المهام</div></div><button class="btn btn-p" onclick="openModal('task')">＋ توثيق مهمة</button></div>
-      <div class="seclbl">تصفية بالبرنامج</div><div class="tabs" id="progTabs"></div>
+      <div class="seclbl">تصفية بالمنتج</div><div class="tabs" id="progTabs"></div>
       <div class="seclbl" style="margin-top:.5rem;">تصفية بمنفذ المهمة</div><div class="tabs" id="userTabs" style="margin-bottom:1.2rem;"></div>
       <div class="tbox">
         <div class="tboxh"><div class="tboxt">سجل المهام</div><input class="srch" placeholder="🔍 بحث..." oninput="filterTbl(this.value,'btbody')"></div>
-        <table><thead><tr><th>البرنامج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات</th><th>ملاحظات</th><th></th></tr></thead><tbody id="btbody"></tbody></table>
+        <table><thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات</th><th>ملاحظات</th><th></th></tr></thead><tbody id="btbody"></tbody></table>
         <div class="empty" id="bempty"><div class="emptyico">📋</div><div class="emptytxt">لا توجد مهام</div></div>
       </div>
     </div>
@@ -362,7 +362,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div class="phact"><button class="btn btn-g admin-only" id="exportAllBtn" style="display:none;" onclick="exportAll()">📦 تصدير شامل</button></div>
       </div>
       <div class="rptgrid">
-        <div class="rptcard"><div class="rptlbl">حسب البرنامج</div><div id="rptProg"></div></div>
+        <div class="rptcard"><div class="rptlbl">حسب المنتج</div><div id="rptProg"></div></div>
         <div class="rptcard"><div class="rptlbl">حسب الشهر</div><div id="rptMonth"></div></div>
         <div class="rptcard"><div class="rptlbl">حسب المهمة</div><div id="rptTask"></div></div>
         <div class="rptcard"><div class="rptlbl">نشاط الفريق</div><div id="rptTeam"></div></div>
@@ -371,13 +371,13 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="tabs" id="rptUserTabs" style="margin-bottom:1rem;"></div>
       <div class="tbox">
         <div class="tboxh"><div class="tboxt" id="rptUserTitle">كل المهام</div><span id="rptUserCount" style="color:var(--g2);font-size:.8rem;"></span></div>
-        <table><thead><tr><th>البرنامج</th><th>المهمة</th><th>التاريخ</th></tr></thead><tbody id="rptUserBody"></tbody></table>
+        <table><thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th></tr></thead><tbody id="rptUserBody"></tbody></table>
         <div class="empty" id="rptUserEmpty" style="display:none;"><div class="emptyico">📭</div><div class="emptytxt">لا توجد مهام</div></div>
       </div>
-      <div class="seclbl" style="margin-top:1rem;">تفاصيل كل برنامج</div>
+      <div class="seclbl" style="margin-top:1rem;">تفاصيل كل منتج</div>
       <div class="tabs" id="rptProgTabs" style="margin-bottom:1rem;"></div>
       <div class="tbox">
-        <div class="tboxh"><div class="tboxt" id="rptProgTitle">كل البرامج</div><span id="rptProgCount" style="color:var(--g2);font-size:.8rem;"></span></div>
+        <div class="tboxh"><div class="tboxt" id="rptProgTitle">كل المنتجات</div><span id="rptProgCount" style="color:var(--g2);font-size:.8rem;"></span></div>
         <table><thead><tr><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th></tr></thead><tbody id="rptProgBody"></tbody></table>
         <div class="empty" id="rptProgEmpty" style="display:none;"><div class="emptyico">📭</div><div class="emptytxt">لا توجد مهام</div></div>
       </div>
@@ -408,8 +408,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <button class="btn btn-g" onclick="showPage('dashboard',document.querySelector('[data-p=dashboard]'))">← رجوع</button>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;">
-        <div class="seclbl" style="margin:0;">البرامج وأنواع المهام</div>
-        <button class="btn btn-p btn-s" onclick="openModal('addprog')">＋ برنامج</button>
+        <div class="seclbl" style="margin:0;">المنتجات وأنواع المهام</div>
+        <button class="btn btn-p btn-s" onclick="openModal('addprog')">＋ منتج</button>
       </div>
       <div id="progManager" style="margin-bottom:1.5rem;"></div>
       <div class="seclbl" style="margin-bottom:.8rem;">القوائم الأخرى</div>
@@ -425,12 +425,12 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="mhead"><div class="mtitle">📋 توثيق مهمة</div><button class="mclose" onclick="closeModal('task')">✕</button></div>
     <div class="mbody">
       <div class="fgrid">
-        <div class="fg f2"><label class="fl">البرنامج *</label>
+        <div class="fg f2"><label class="fl">المنتج *</label>
           <div class="frow"><select class="fs" id="b-prog" onchange="onProgChange()"><option value="">— اختر —</option></select>
           <button class="btn btn-g btn-s" onclick="openModal('addprog')" style="flex-shrink:0;">＋</button></div>
         </div>
         <div class="fg f2"><label class="fl">المهمة *</label>
-          <div class="frow"><select class="fs" id="b-type"><option value="">— اختر البرنامج أولاً —</option></select>
+          <div class="frow"><select class="fs" id="b-type"><option value="">— اختر المنتج أولاً —</option></select>
           <button class="btn btn-g btn-s" id="addTypeBtn" onclick="addTypeInline()" style="flex-shrink:0;display:none;">＋</button></div>
         </div>
         <div class="fg f2"><label class="fl">التاريخ</label><input class="fi" id="b-date" type="date"></div>
@@ -454,9 +454,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 <div class="overlay" id="ov-addprog">
   <div class="modal sm">
-    <div class="mhead"><div class="mtitle">📺 إضافة برنامج</div><button class="mclose" onclick="closeModal('addprog')">✕</button></div>
+    <div class="mhead"><div class="mtitle">📺 إضافة منتج</div><button class="mclose" onclick="closeModal('addprog')">✕</button></div>
     <div class="mbody">
-      <div class="fg"><label class="fl">اسم البرنامج *</label><input class="fi" id="np-name" placeholder="مثل: استديو الجماهير"></div>
+      <div class="fg"><label class="fl">اسم المنتج *</label><input class="fi" id="np-name" placeholder="مثل: استديو الجماهير"></div>
       <div class="fg"><label class="fl">أنواع المهام (افصل بفاصلة)</label><input class="fi" id="np-types" placeholder="بث مباشر، تحرير مباشر">
         <span style="color:var(--g1);font-size:.72rem;margin-top:2px;">تقدر تضيف لاحقاً من الإعدادات</span></div>
     </div>
@@ -776,7 +776,7 @@ function initTaskModal() {
   document.getElementById('b-notes').value='';
   var ps=document.getElementById('b-prog');
   ps.innerHTML='<option value="">— اختر —</option>'+S.programs.map(function(p){return'<option value="'+p.id+'">'+p.name+'</option>';}).join('');
-  document.getElementById('b-type').innerHTML='<option value="">— اختر البرنامج أولاً —</option>';
+  document.getElementById('b-type').innerHTML='<option value="">— اختر المنتج أولاً —</option>';
   document.getElementById('addTypeBtn').style.display='none';
   renderExecList();
   renderEquipSelect();
@@ -839,13 +839,13 @@ function getSelectedEquip() {
 function onProgChange() {
   var prog=S.programs.find(function(p){return p.id===document.getElementById('b-prog').value;});
   var ts=document.getElementById('b-type'),ab=document.getElementById('addTypeBtn');
-  if(!prog){ts.innerHTML='<option value="">— اختر البرنامج أولاً —</option>';ab.style.display='none';return;}
+  if(!prog){ts.innerHTML='<option value="">— اختر المنتج أولاً —</option>';ab.style.display='none';return;}
   ts.innerHTML=prog.types.map(function(t){return'<option>'+t+'</option>';}).join('')||'<option value="">لا توجد مهام</option>';
   ab.style.display='block';
 }
 function addTypeInline() {
   var pid=document.getElementById('b-prog').value;
-  if(!pid){toast('اختر برنامجاً أولاً','err');return;}
+  if(!pid){toast('اختر منتجاً أولاً','err');return;}
   showInputModal('اسم المهمة الجديدة', 'مثال: تحرير مباشر', function(name) {
     var prog=S.programs.find(function(p){return p.id===pid;});
     if(prog.types.indexOf(name)!==-1){toast('المهمة موجودة مسبقاً','err');return;}
@@ -873,7 +873,7 @@ function showInputModal(title, placeholder, onOk) {
 function saveTask() {
   var prog=S.programs.find(function(p){return p.id===document.getElementById('b-prog').value;});
   var type=document.getElementById('b-type').value;
-  if(!prog){toast('اختر البرنامج','err');return;}
+  if(!prog){toast('اختر المنتج','err');return;}
   if(!type){toast('اختر المهمة','err');return;}
   var rec={id:Date.now(), name:prog.name, type:type,
     date:document.getElementById('b-date').value,
@@ -883,7 +883,7 @@ function saveTask() {
     by:currentUser, at:new Date().toISOString()};
   S.broadcasts.unshift(rec); saveState(); closeModal('task'); renderAll(); toast('تم توثيق المهمة ✓');
   apiPost({action:'add',type:'broadcasts',data:{
-    'البرنامج':rec.name,'المهمة':rec.type,'التاريخ':rec.date,
+    'المنتج':rec.name,'المهمة':rec.type,'التاريخ':rec.date,
     'منفذو المهمة':rec.executors.join('، '),
     'المعدات':rec.equipment.map(function(e){return e.name+'('+e.cond.replace(/[✅⚠️❌📦🔧]\s*/,'')+')';}).join('، '),
     'ملاحظات':rec.notes}});
@@ -910,7 +910,7 @@ function saveTeamMember() {
 
 function saveNewProgram() {
   var name=document.getElementById('np-name').value.trim();
-  if(!name){toast('أدخل اسم البرنامج','err');return;}
+  if(!name){toast('أدخل اسم المنتج','err');return;}
   var types=document.getElementById('np-types').value.split(/[,،]/).map(function(t){return t.trim();}).filter(Boolean);
   S.programs.push({id:'p'+Date.now(),name:name,types:types}); saveState();
   document.getElementById('np-name').value=''; document.getElementById('np-types').value='';
@@ -1051,7 +1051,7 @@ function fRP(p,s) {
   _rp=p;
   if(!s)document.querySelectorAll('#rptProgTabs .tab').forEach(function(t){t.classList.toggle('active',(p==='all'&&t.textContent.startsWith('الكل'))||t.textContent.trim()===p);});
   var list=p==='all'?S.broadcasts:S.broadcasts.filter(function(b){return b.name===p;});
-  document.getElementById('rptProgTitle').textContent=p==='all'?'كل البرامج':'برنامج: '+p;
+  document.getElementById('rptProgTitle').textContent=p==='all'?'كل المنتجات':'منتج: '+p;
   document.getElementById('rptProgCount').textContent=list.length+' مهمة';
   var tb=document.getElementById('rptProgBody'),em=document.getElementById('rptProgEmpty');
   if(!list.length){tb.innerHTML='';em.style.display='block';return;} em.style.display='none';
@@ -1061,7 +1061,7 @@ function fRP(p,s) {
 // ── SETTINGS ─────────────────────────────────
 function renderSettings() {
   var pm=document.getElementById('progManager');
-  if(!S.programs.length){pm.innerHTML='<div class="empty"><div class="emptyico">📺</div><div class="emptytxt">لا توجد برامج</div></div>';return;}
+  if(!S.programs.length){pm.innerHTML='<div class="empty"><div class="emptyico">📺</div><div class="emptytxt">لا توجد منتجات</div></div>';return;}
   pm.innerHTML=S.programs.map(function(p,pi){
     var chips=p.types.map(function(t,ti){return'<span class="tchip">'+t+'<button class="tchipdel" onclick="delType('+pi+','+ti+')">×</button></span>';}).join('');
     return'<div class="pcard"><div class="phead"><div class="pname">'+p.name+'</div><button class="btn btn-r btn-s" onclick="delProg(\''+p.id+'\')">حذف</button></div>'+
@@ -1076,7 +1076,7 @@ function renderSettings() {
 }
 function addType(pi){var i=document.getElementById('pt-'+pi),v=i.value.trim();if(!v)return;if(S.programs[pi].types.indexOf(v)!==-1){toast('موجودة','err');return;}S.programs[pi].types.push(v);saveState();i.value='';renderSettings();toast('✓');}
 function delType(pi,ti){S.programs[pi].types.splice(ti,1);saveState();renderSettings();}
-function delProg(pid){var idx=S.programs.findIndex(function(p){return p.id===pid;});if(idx===-1){toast('غير موجود','err');return;}showConfirm('حذف برنامج "'+S.programs[idx].name+'"؟',function(){S.programs.splice(idx,1);saveState();renderSettings();toast('تم الحذف');});}
+function delProg(pid){var idx=S.programs.findIndex(function(p){return p.id===pid;});if(idx===-1){toast('غير موجود','err');return;}showConfirm('حذف منتج "'+S.programs[idx].name+'"؟',function(){S.programs.splice(idx,1);saveState();renderSettings();toast('تم الحذف');});}
 function addOpt(k){var i=document.getElementById('oa-'+k),v=i.value.trim();if(!v)return;if(S.opts[k].indexOf(v)!==-1){toast('موجود','err');return;}S.opts[k].push(v);saveState();i.value='';renderSettings();toast('✓');}
 function rmOpt(k,idx){S.opts[k].splice(idx,1);saveState();renderSettings();}
 
@@ -1099,7 +1099,7 @@ function eq(s){return s.replace(/'/g,"\\'").replace(/"/g,'&quot;');}
 function exportAll() {
   if(currentRole!=='admin'){toast('ليس لديك صلاحية','err');return;}
   function toCSV(h,rows){return'\uFEFF'+h.join(',')+'\n'+rows.map(function(r){return r.map(function(v){return'"'+((v||'').toString().replace(/"/g,'""'))+'"';}).join(',');}).join('\n');}
-  [{name:'المهام',h:['البرنامج','المهمة','التاريخ','منفذو المهمة','المعدات','ملاحظات'],r:S.broadcasts.map(function(b){return[b.name,b.type,b.date,exStr(b),eqStr(b),b.notes];})},
+  [{name:'المهام',h:['المنتج','المهمة','التاريخ','منفذو المهمة','المعدات','ملاحظات'],r:S.broadcasts.map(function(b){return[b.name,b.type,b.date,exStr(b),eqStr(b),b.notes];})},
    {name:'المعدات',h:['الاسم','الفئة','الحالة','الرقم التسلسلي','تاريخ الشراء','ملاحظات'],r:S.equipment.map(function(e){return[e.name,e.cat,e.status,e.serial,e.date,e.notes];})},
    {name:'الفريق',h:['الاسم','ملاحظات'],r:S.team.map(function(t){return[t.name,t.notes];})}
   ].forEach(function(f,i){setTimeout(function(){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([toCSV(f.h,f.r)],{type:'text/csv;charset=utf-8'}));var nameMap={'المهام':'tasks','المعدات':'equipment','الفريق':'team'};a.download='t8-'+(nameMap[f.name]||f.name)+'-'+new Date().toISOString().slice(0,10)+'.csv';a.click();},i*400);});
