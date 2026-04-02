@@ -333,7 +333,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
       <div class="tbox">
         <div class="tboxh"><div class="tboxt">آخر المهام الموثقة</div><input class="srch" placeholder="🔍 بحث..." oninput="filterTbl(this.value,'dtbody')"></div>
-        <table><thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات</th><th></th></tr></thead><tbody id="dtbody"></tbody></table>
+        <table><thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات</th><th>ملاحظات</th><th></th></tr></thead><tbody id="dtbody"></tbody></table>
         <div class="empty" id="dempty"><div class="emptyico">📋</div><div class="emptytxt">لا توجد مهام موثقة بعد</div></div>
       </div>
     </div>
@@ -1007,6 +1007,7 @@ function renderDash() {
     return '<tr><td><strong>'+b.name+'</strong></td><td>'+b.type+'</td><td>'+(b.date||'—')+'</td>' +
       '<td style="color:var(--gr);font-size:.82rem;">'+exStr(b)+'</td>' +
       '<td style="color:var(--g2);font-size:.78rem;">'+eqStr(b)+'</td>' +
+      '<td style="color:var(--g2);font-size:.78rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(b.notes||'—')+'</td>' +
       '<td><button class="btn btn-g btn-s" onclick="delTask('+b.id+')" style="padding:3px 8px;">×</button></td></tr>';
   }).join('');
 }
@@ -1045,6 +1046,7 @@ function renderEquip() {
     return '<div class="card"><div class="cico">'+e.cat.split(' ')[0]+'</div><div class="cname">'+e.name+'</div>' +
       '<div class="csub">'+e.cat.split(' ').slice(1).join(' ')+'</div>' +
       (e.serial?'<div class="csub" style="font-family:monospace;font-size:.71rem;margin-top:3px;color:var(--g1);">'+e.serial+'</div>':'')+
+      (e.notes?'<div class="csub" style="font-size:.73rem;color:var(--g1);margin-top:3px;">'+e.notes+'</div>':'')+
       '<div class="cfoot"><span class="badge '+bcls(e.status)+'">'+e.status+'</span>' +
       '<button class="btn btn-g btn-s" onclick="delEquip('+e.id+')" style="padding:3px 8px;">×</button></div></div>';
   }).join('');
