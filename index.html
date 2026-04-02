@@ -670,21 +670,25 @@ function enterApp() {
   loadFromFirestore();
 }
 
-async function loadFromFirestore() {
-  try {
-    var results = await Promise.all([
-      db.collection('broadcasts').orderBy('at','desc').get(),
-      db.collection('equipment').get(),
-      db.collection('team').get(),
-      db.collection('programs').get()
-    ]);
-    var bSnap=results[0], eSnap=results[1], tSnap=results[2], pSnap=results[3];
-    if(!bSnap.empty) S.broadcasts = bSnap.docs.map(function(d){return d.data();});
-    if(!eSnap.empty) S.equipment  = eSnap.docs.map(function(d){return d.data();});
-    if(!tSnap.empty) S.team       = tSnap.docs.map(function(d){return d.data();});
-    if(!pSnap.empty) S.programs   = pSnap.docs.map(function(d){return d.data();});
+function loadFromFirestore() {
+  db.collection('broadcasts').orderBy('at','desc').onSnapshot(function(snap) {
+    S.broadcasts = snap.docs.map(function(d){return d.data();});
     saveState(); renderAll();
-  } catch(e) { console.warn('Firestore load failed, using cache', e); }
+  }, function(e){ console.warn('broadcasts listener error', e); });
+
+  db.collection('equipment').onSnapshot(function(snap) {
+    S.equipment = snap.docs.map(function(d){return d.data();});
+    saveState(); renderEquip(); renderStats();
+  }, function(e){ console.warn('equipment listener error', e); });
+
+  db.collection('team').onSnapshot(function(snap) {
+    S.team = snap.docs.map(function(d){return d.data();});
+    saveState(); renderTeam(); renderStats();
+  }, function(e){ console.warn('team listener error', e); });
+
+  db.collection('programs').onSnapshot(function(snap) {
+    if(!snap.empty) { S.programs = snap.docs.map(function(d){return d.data()}); saveState(); }
+  }, function(e){ console.warn('programs listener error', e); });
 }
 
 function logout() {
