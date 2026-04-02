@@ -217,6 +217,24 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px;}
 @media(max-width:700px){.layout{grid-template-columns:1fr;}nav{display:none;}.stats,.cgrid,.ugrid{grid-template-columns:repeat(2,1fr);}.rptgrid{grid-template-columns:1fr;}}
+.print-header{display:none;}
+@media print{
+  nav,.header,.phact,.btn,.tabs,.srch,.rptUserTabs,.rptProgTabs,.toast{display:none!important;}
+  body,html{background:#fff!important;color:#000!important;}
+  .layout{display:block!important;}
+  .page{display:none!important;}
+  #page-reports{display:block!important;}
+  .print-header{display:block;text-align:center;margin-bottom:1.5rem;border-bottom:2px solid #000;padding-bottom:.8rem;}
+  .print-header h2{font-size:1.3rem;margin:0 0 4px;}
+  .print-header span{font-size:.85rem;color:#555;}
+  .rptgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;}
+  .rptcard{border:1px solid #ddd;border-radius:8px;padding:.8rem;break-inside:avoid;}
+  .tbox{break-inside:avoid;border:1px solid #ddd;border-radius:8px;padding:.8rem;margin-top:.8rem;}
+  table{width:100%;border-collapse:collapse;}
+  th,td{border:1px solid #ccc;padding:5px 8px;font-size:.78rem;text-align:right;}
+  th{background:#f5f5f5;font-weight:600;}
+  .seclbl{font-weight:700;margin:1rem 0 .4rem;font-size:.9rem;}
+}
 </style>
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -360,9 +378,16 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
 
     <div class="page" id="page-reports">
+      <div class="print-header">
+        <h2>نظام التوثيق الداخلي — ثمانية</h2>
+        <span id="printDate"></span>
+      </div>
       <div class="ph">
         <div><div class="phtitle">التقارير</div></div>
-        <div class="phact"><button class="btn btn-g admin-only" id="exportAllBtn" style="display:none;" onclick="exportAll()">📦 تصدير شامل</button></div>
+        <div class="phact" style="gap:8px;">
+          <button class="btn btn-g admin-only" id="exportAllBtn" style="display:none;" onclick="exportAll()">⬇️ تصدير CSV</button>
+          <button class="btn btn-p admin-only" id="printBtn" style="display:none;" onclick="printReport()">🖨️ طباعة</button>
+        </div>
       </div>
       <div class="rptgrid">
         <div class="rptcard"><div class="rptlbl">حسب المنتج</div><div id="rptProg"></div></div>
@@ -666,6 +691,7 @@ function enterApp() {
   var ia = currentRole==='admin';
   document.getElementById('adminMenuBtn').style.display = ia?'flex':'none';
   document.getElementById('exportAllBtn').style.display = ia?'flex':'none';
+  document.getElementById('printBtn').style.display = ia?'flex':'none';
   document.querySelectorAll('.admin-only').forEach(function(e){ e.style.display=ia?'':'none'; });
   document.querySelectorAll('.nitem.admin-only').forEach(function(e){ e.classList.toggle('hidden',!ia); });
   if (SCRIPT_URL) { document.getElementById('scriptUrlIn').value=SCRIPT_URL; setConn(true); }
@@ -1199,6 +1225,14 @@ function showPage(id,el) {
 // ── UTILS ────────────────────────────────────
 function filterTbl(q,id){document.querySelectorAll('#'+id+' tr').forEach(function(r){r.style.display=r.textContent.toLowerCase().indexOf(q.toLowerCase())!==-1?'':'none';});}
 function eq(s){return s.replace(/'/g,"\\'").replace(/"/g,'&quot;');}
+
+function printReport() {
+  if(currentRole!=='admin'){toast('ليس لديك صلاحية','err');return;}
+  document.getElementById('printDate').textContent = 'تاريخ الطباعة: ' + new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+  showPage('reports');
+  renderReports();
+  setTimeout(function(){ window.print(); }, 300);
+}
 
 function exportAll() {
   if(currentRole!=='admin'){toast('ليس لديك صلاحية','err');return;}
