@@ -1,6 +1,6 @@
 // sw.js  –  Thamaniya PWA Service Worker
 // IMPORTANT: bump CACHE_NAME after every deployment to force cache refresh
-const CACHE_NAME = 't8-v6';
+const CACHE_NAME = 't8-v7';
 
 const PRECACHE_URLS = [
   './',
@@ -57,22 +57,20 @@ self.addEventListener('fetch', function(event) {
     return;
   }
 
-  // Cache-first for app shell (index.html, icons, manifest)
+  // Network-first: try network, fallback to cache (ensures updates load immediately)
   event.respondWith(
-    caches.match(event.request).then(function(cachedResponse) {
-      if (cachedResponse) return cachedResponse;
-
-      return fetch(event.request).then(function(networkResponse) {
-        if (!networkResponse || networkResponse.status !== 200 ||
-            (networkResponse.type !== 'basic' && networkResponse.type !== 'cors')) {
-          return networkResponse;
-        }
+    fetch(event.request).then(function(networkResponse) {
+      if (networkResponse && networkResponse.status === 200 &&
+          (networkResponse.type === 'basic' || networkResponse.type === 'cors')) {
         var responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then(function(cache) {
           cache.put(event.request, responseToCache);
         });
-        return networkResponse;
-      }).catch(function() {
+      }
+      return networkResponse;
+    }).catch(function() {
+      return caches.match(event.request).then(function(cached) {
+        if (cached) return cached;
         if (event.request.destination === 'document') {
           return caches.match('./index.html');
         }
