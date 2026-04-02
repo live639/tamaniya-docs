@@ -333,7 +333,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
       <div class="tbox">
         <div class="tboxh"><div class="tboxt">آخر المهام الموثقة</div><input class="srch" placeholder="🔍 بحث..." oninput="filterTbl(this.value,'dtbody')"></div>
-        <table><thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات</th><th>ملاحظات</th><th></th></tr></thead><tbody id="dtbody"></tbody></table>
+        <table><thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات / ملاحظات</th><th></th></tr></thead><tbody id="dtbody"></tbody></table>
         <div class="empty" id="dempty"><div class="emptyico">📋</div><div class="emptytxt">لا توجد مهام موثقة بعد</div></div>
       </div>
     </div>
@@ -344,7 +344,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="seclbl" style="margin-top:.5rem;">تصفية بمنفذ المهمة</div><div class="tabs" id="userTabs" style="margin-bottom:1.2rem;"></div>
       <div class="tbox">
         <div class="tboxh"><div class="tboxt">سجل المهام</div><input class="srch" placeholder="🔍 بحث..." oninput="filterTbl(this.value,'btbody')"></div>
-        <table><thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات</th><th>ملاحظات</th><th></th></tr></thead><tbody id="btbody"></tbody></table>
+        <table><thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات / ملاحظات</th><th></th></tr></thead><tbody id="btbody"></tbody></table>
         <div class="empty" id="bempty"><div class="emptyico">📋</div><div class="emptytxt">لا توجد مهام</div></div>
       </div>
     </div>
@@ -442,12 +442,15 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <div class="execlist" id="execList"></div>
         </div>
         <div class="fg f2">
-          <label class="fl">المعدات المستخدمة <span style="color:var(--g1);font-weight:400;">(اختياري)</span></label>
-          <div class="esellist" id="equipSelList"></div>
-        </div>
-        <div class="fg f2">
-          <label class="fl">ملاحظات <span style="color:var(--g1);font-weight:400;">(اختياري)</span></label>
-          <textarea class="ft" id="b-notes" placeholder="أي ملاحظات أو تفاصيل إضافية..."></textarea>
+          <label class="fl">المعدات والملاحظات <span style="color:var(--g1);font-weight:400;">(اختياري)</span></label>
+          <div class="frow" style="margin-bottom:6px;">
+            <select class="fs" id="equip-pick" onchange="pickEquip()">
+              <option value="">— اختر معدة —</option>
+            </select>
+            <button class="btn btn-g btn-s" onclick="addEquipCustom()" style="flex-shrink:0;" title="أضف معدة جديدة">＋</button>
+          </div>
+          <div id="equipTags" style="display:flex;flex-wrap:wrap;gap:6px;min-height:10px;margin-bottom:6px;"></div>
+          <textarea class="ft" id="b-notes" placeholder="ملاحظات أو تفاصيل إضافية..."></textarea>
         </div>
       </div>
     </div>
@@ -825,6 +828,8 @@ function showConfirm(msg,onOk) {
 }
 
 // ── TASK MODAL ───────────────────────────────
+var _selEquip = [];
+
 function initTaskModal() {
   document.getElementById('b-date').valueAsDate=new Date();
   document.getElementById('b-notes').value='';
@@ -832,8 +837,46 @@ function initTaskModal() {
   ps.innerHTML='<option value="">— اختر —</option>'+S.programs.map(function(p){return'<option value="'+p.id+'">'+p.name+'</option>';}).join('');
   document.getElementById('b-type').innerHTML='<option value="">— اختر المنتج أولاً —</option>';
   document.getElementById('addTypeBtn').style.display='none';
+  _selEquip=[];
+  renderEquipPicker();
+  renderEquipTags();
   renderExecList();
-  renderEquipSelect();
+}
+
+function renderEquipPicker() {
+  var sel=document.getElementById('equip-pick');
+  if(!sel) return;
+  sel.innerHTML='<option value="">— اختر معدة —</option>'+
+    S.equipment.map(function(e){return'<option value="'+eq(e.name)+'">'+e.cat.split(' ')[0]+' '+e.name+'</option>';}).join('')+
+    '<option value="__new__">＋ أضف معدة جديدة...</option>';
+}
+
+function pickEquip() {
+  var sel=document.getElementById('equip-pick');
+  var val=sel.value; sel.value='';
+  if(!val) return;
+  if(val==='__new__'){ addEquipCustom(); return; }
+  if(_selEquip.indexOf(val)===-1){ _selEquip.push(val); renderEquipTags(); }
+}
+
+function addEquipCustom() {
+  showInputModal('اسم المعدة', 'مثال: كاميرا Sony', function(name){
+    if(_selEquip.indexOf(name)===-1){ _selEquip.push(name); renderEquipTags(); }
+  });
+}
+
+function removeEquipTag(name) {
+  _selEquip=_selEquip.filter(function(e){return e!==name;});
+  renderEquipTags();
+}
+
+function renderEquipTags() {
+  var el=document.getElementById('equipTags');
+  if(!el) return;
+  el.innerHTML=_selEquip.map(function(name){
+    return '<span style="background:var(--s2);padding:4px 10px;border-radius:20px;font-size:.78rem;display:flex;align-items:center;gap:5px;">'+
+      name+'<button onclick="removeEquipTag(\''+eq(name)+'\')" style="background:none;border:none;color:var(--g2);cursor:pointer;padding:0;font-size:.85rem;line-height:1;">×</button></span>';
+  }).join('');
 }
 
 // قائمة منفذي المهمة — من المستخدمين المسجلين
@@ -933,7 +976,7 @@ function saveTask() {
   var rec={id:Date.now(), name:prog.name, type:type,
     date:document.getElementById('b-date').value,
     executors:getSelectedExecutors(),
-    equipment:getSelectedEquip(),
+    equipment:_selEquip.map(function(n){return{name:n,cond:''};}),
     notes:document.getElementById('b-notes').value,
     by:currentUser, at:new Date().toISOString()};
   S.broadcasts.unshift(rec); saveState(); closeModal('task'); renderAll(); toast('تم توثيق المهمة ✓');
@@ -1006,8 +1049,10 @@ function renderDash() {
   tb.innerHTML=S.broadcasts.slice(0,12).map(function(b){
     return '<tr><td><strong>'+b.name+'</strong></td><td>'+b.type+'</td><td>'+(b.date||'—')+'</td>' +
       '<td style="color:var(--gr);font-size:.82rem;">'+exStr(b)+'</td>' +
-      '<td style="color:var(--g2);font-size:.78rem;">'+eqStr(b)+'</td>' +
-      '<td style="color:var(--g2);font-size:.78rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(b.notes||'—')+'</td>' +
+      '<td style="font-size:.78rem;max-width:160px;">'+
+        (eqStr(b)!=='—'?'<div style="color:var(--g2);">'+eqStr(b)+'</div>':'')+
+        (b.notes?'<div style="color:var(--g1);margin-top:2px;">'+b.notes+'</div>':(!eqStr(b)||eqStr(b)==='—'?'—':''))+
+      '</td>'+
       '<td><button class="btn btn-g btn-s" onclick="delTask('+b.id+')" style="padding:3px 8px;">×</button></td></tr>';
   }).join('');
 }
@@ -1032,8 +1077,10 @@ function renderTasks(pf, uf) {
   tb.innerHTML=list.map(function(b){
     return '<tr><td><strong>'+b.name+'</strong></td><td>'+b.type+'</td><td>'+(b.date||'—')+'</td>' +
       '<td style="color:var(--gr);font-size:.82rem;">'+exStr(b)+'</td>' +
-      '<td style="color:var(--g2);font-size:.78rem;">'+eqStr(b)+'</td>' +
-      '<td style="color:var(--g2);font-size:.78rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(b.notes||'—')+'</td>' +
+      '<td style="font-size:.78rem;max-width:160px;">'+
+        (eqStr(b)!=='—'?'<div style="color:var(--g2);">'+eqStr(b)+'</div>':'')+
+        (b.notes?'<div style="color:var(--g1);margin-top:2px;">'+b.notes+'</div>':(!eqStr(b)||eqStr(b)==='—'?'—':''))+
+      '</td>'+
       '<td><button class="btn btn-g btn-s" onclick="delTask('+b.id+')" style="padding:3px 8px;">×</button></td></tr>';
   }).join('');
 }
