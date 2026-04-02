@@ -99,7 +99,7 @@ main{padding:1.5rem;overflow-y:auto;}
 .stv{font-size:2.1rem;font-weight:700;color:var(--w);letter-spacing:-.03em;}
 .stn{color:var(--g1);font-size:.72rem;margin-top:3px;}
 
-.tbox{background:var(--s1);border:1px solid var(--s3);border-radius:16px;overflow:hidden;margin-bottom:1.5rem;}
+.tbox{background:var(--s1);border:1px solid var(--s3);border-radius:16px;overflow:hidden;margin-bottom:1.5rem;}.tbox table{min-width:600px;}.tbox{overflow-x:auto;}
 .tboxh{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.2rem;border-bottom:1px solid var(--s3);gap:.7rem;flex-wrap:wrap;}
 .tboxt{font-weight:600;font-size:.92rem;}
 .srch{background:var(--s2);border:1px solid var(--s3);color:var(--w);padding:6px 12px;border-radius:8px;font-size:.83rem;direction:rtl;width:165px;}
@@ -385,8 +385,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="ph">
         <div><div class="phtitle">التقارير</div></div>
         <div class="phact" style="gap:8px;">
-          <button class="btn btn-g admin-only" id="exportAllBtn" style="display:none;" onclick="exportAll()">⬇️ تصدير CSV</button>
-          <button class="btn btn-p admin-only" id="printBtn" style="display:none;" onclick="printReport()">🖨️ طباعة</button>
+          <button class="btn btn-g admin-only" id="exportAllBtn" onclick="exportAll()">⬇️ تصدير CSV</button>
+          <button class="btn btn-p admin-only" id="printBtn" onclick="printReport()">🖨️ طباعة</button>
         </div>
       </div>
       <div class="rptgrid">
@@ -690,9 +690,7 @@ function enterApp() {
   document.getElementById('userAv').className     = 'av'+(currentRole==='admin'?' adm':'');
   var ia = currentRole==='admin';
   document.getElementById('adminMenuBtn').style.display = ia?'flex':'none';
-  document.getElementById('exportAllBtn').style.display = ia?'flex':'none';
-  document.getElementById('printBtn').style.display = ia?'flex':'none';
-  document.querySelectorAll('.admin-only').forEach(function(e){ e.style.display=ia?'':'none'; });
+  document.querySelectorAll('.admin-only').forEach(function(e){ e.style.display=ia?(e.tagName==='BUTTON'?'flex':''):''  ; if(!ia) e.style.display='none'; });
   document.querySelectorAll('.nitem.admin-only').forEach(function(e){ e.classList.toggle('hidden',!ia); });
   if (SCRIPT_URL) { document.getElementById('scriptUrlIn').value=SCRIPT_URL; setConn(true); }
   renderAll();
