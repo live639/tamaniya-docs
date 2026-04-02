@@ -243,8 +243,18 @@ tr:hover td{background:rgba(255,255,255,.02);}
   [data-print-section="prog"] .rptgrid,
   [data-print-section="prog"] #rptUserBox,
   [data-print-section="prog"] #rptUserTabs,
+  [data-print-section="prog"] #rptEquipBox,
   [data-print-section="prog"] #summBody,
   [data-print-section="prog"] .tbox:last-child{display:none!important;}
+  [data-print-section="equip"] .rptgrid,
+  [data-print-section="equip"] #rptUserBox,
+  [data-print-section="equip"] #rptUserTabs,
+  [data-print-section="equip"] #rptProgBox,
+  [data-print-section="equip"] #rptProgTabs,
+  [data-print-section="equip"] #summBody,
+  [data-print-section="equip"] .tbox:last-child{display:none!important;}
+  [data-print-section="user"] #rptEquipBox,
+  [data-print-section="prog"] #rptEquipBox{display:none!important;}
 }
 </style>
 <!-- Firebase -->
@@ -440,6 +450,15 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div class="rptcard"><div class="rptlbl">حسب الشهر</div><div id="rptMonth"></div></div>
         <div class="rptcard"><div class="rptlbl">حسب المهمة</div><div id="rptTask"></div></div>
         <div class="rptcard"><div class="rptlbl">نشاط الفريق</div><div id="rptTeam"></div></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;">
+        <div class="seclbl" style="margin:0;">استخدام المعدات</div>
+        <button class="btn btn-g btn-s" onclick="printSection('equip')" style="font-size:.75rem;">🖨️ PDF</button>
+      </div>
+      <div class="tbox" id="rptEquipBox">
+        <div class="tboxh"><div class="tboxt">عدد مرات استخدام كل معدة</div></div>
+        <table><thead><tr><th>المعدة</th><th>عدد المرات</th><th>آخر استخدام</th></tr></thead><tbody id="rptEquipBody"></tbody></table>
+        <div class="empty" id="rptEquipEmpty" style="display:none;"><div class="emptyico">🎛️</div><div class="emptytxt">لا توجد بيانات</div></div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;">
         <div class="seclbl" style="margin:0;">تفاصيل كل منفذ</div>
@@ -1366,6 +1385,23 @@ function renderReports() {
   var rpt='<button class="tab'+(_rp==='all'?' active':'')+'" onclick="fRP(\'all\')">الكل ('+b.length+')</button>';
   ap.forEach(function(p){rpt+='<button class="tab'+(_rp===p?' active':'')+'" onclick="fRP(\''+eq(p)+'\')">'+p+'</button>';});
   document.getElementById('rptProgTabs').innerHTML=rpt; fRP(_rp,false);
+  // equipment usage
+  var equipCount={}, equipLast={};
+  b.forEach(function(r){
+    if(!Array.isArray(r.equipment)) return;
+    r.equipment.forEach(function(e){
+      var n=e.name||e;
+      equipCount[n]=(equipCount[n]||0)+1;
+      if(!equipLast[n]||r.date>equipLast[n]) equipLast[n]=r.date||'';
+    });
+  });
+  var equipEntries=Object.entries(equipCount).sort(function(a,c){return c[1]-a[1];});
+  var eqTb=document.getElementById('rptEquipBody'),eqEm=document.getElementById('rptEquipEmpty');
+  if(!equipEntries.length){eqTb.innerHTML='';eqEm.style.display='block';}
+  else{eqEm.style.display='none';eqTb.innerHTML=equipEntries.map(function(kv){
+    return '<tr><td><strong>'+kv[0]+'</strong></td><td style="text-align:center;font-weight:700;color:var(--gr);">'+kv[1]+'</td><td style="color:var(--g2);">'+(equipLast[kv[0]]||'—')+'</td></tr>';
+  }).join('');}
+
   // summary
   document.getElementById('summBody').innerHTML=[['إجمالي المهام الموثقة',b.length],['هذا الشهر',b.filter(function(r){return r.date&&r.date.startsWith(new Date().toISOString().slice(0,7));}).length],['المعدات',S.equipment.length],['الفريق',S.team.length]].map(function(row){return'<tr><td style="color:var(--g2);">'+row[0]+'</td><td style="font-weight:700;color:var(--gr);">'+row[1]+'</td></tr>';}).join('');
 }
