@@ -885,6 +885,14 @@ function pickEquip() {
 
 function addEquipCustom() {
   showInputModal('اسم المعدة', 'مثال: كاميرا Sony', function(name){
+    // حفظ المعدة في القائمة الدائمة
+    var exists = S.equipment.find(function(e){return e.name===name;});
+    if(!exists){
+      var rec={id:Date.now(),name:name,cat:'📦 أخرى',status:'✅ يعمل ممتاز',serial:'',date:'',notes:''};
+      S.equipment.unshift(rec); saveState();
+      db.collection('equipment').doc(String(rec.id)).set(rec);
+      renderEquipPicker();
+    }
     if(_selEquip.indexOf(name)===-1){ _selEquip.push(name); renderEquipTags(); }
   });
 }
