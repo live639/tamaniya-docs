@@ -671,8 +671,12 @@ function enterApp() {
 }
 
 function loadFromFirestore() {
+  // Broadcasts — admin يرى الكل، العضو يرى اضافاته فقط
   db.collection('broadcasts').orderBy('at','desc').onSnapshot(function(snap) {
-    S.broadcasts = snap.docs.map(function(d){return d.data();});
+    var all = snap.docs.map(function(d){return d.data();});
+    S.broadcasts = currentRole === 'admin'
+      ? all
+      : all.filter(function(b){ return (Array.isArray(b.executors)?b.executors:[b.by]).indexOf(currentUser) !== -1; });
     saveState(); renderAll();
   }, function(e){ console.warn('broadcasts listener error', e); });
 
@@ -687,8 +691,23 @@ function loadFromFirestore() {
   }, function(e){ console.warn('team listener error', e); });
 
   db.collection('programs').onSnapshot(function(snap) {
-    if(!snap.empty) { S.programs = snap.docs.map(function(d){return d.data()}); saveState(); }
+    if(!snap.empty) {
+      S.programs = snap.docs.map(function(d){return d.data();});
+      saveState(); renderSettings();
+    }
   }, function(e){ console.warn('programs listener error', e); });
+
+  db.collection('settings').doc('opts').onSnapshot(function(doc) {
+    if(doc.exists) { S.opts = doc.data(); saveState(); renderSettings(); }
+  }, function(e){ console.warn('opts listener error', e); });
+
+  // Users — تحديث قائمة المستخدمين فوراً
+  db.collection('users').onSnapshot(function(snap) {
+    var users = snap.docs.map(function(d){return d.data();});
+    lsSet('t8_users', users);
+    renderUsersPage();
+    renderMemberList(users);
+  }, function(e){ console.warn('users listener error', e); });
 }
 
 function logout() {
@@ -1110,11 +1129,11 @@ function renderSettings() {
       '<div class="omgra"><input id="oa-'+k+'" placeholder="خيار جديد..." onkeydown="if(event.key===\'Enter\')addOpt(\''+k+'\')"><button class="btn btn-p btn-s" onclick="addOpt(\''+k+'\')">إضافة</button></div></div>';
   }).join('');
 }
-function addType(pi){var i=document.getElementById('pt-'+pi),v=i.value.trim();if(!v)return;if(S.programs[pi].types.indexOf(v)!==-1){toast('موجودة','err');return;}S.programs[pi].types.push(v);saveState();i.value='';renderSettings();toast('✓');}
-function delType(pi,ti){S.programs[pi].types.splice(ti,1);saveState();renderSettings();}
+function addType(pi){var i=document.getElementById('pt-'+pi),v=i.value.trim();if(!v)return;if(S.programs[pi].types.indexOf(v)!==-1){toast('موجودة','err');return;}S.programs[pi].types.push(v);saveState();i.value='';renderSettings();toast('✓');db.collection('programs').doc(S.programs[pi].id).set(S.programs[pi]);}
+function delType(pi,ti){S.programs[pi].types.splice(ti,1);saveState();renderSettings();db.collection('programs').doc(S.programs[pi].id).set(S.programs[pi]);}
 function delProg(pid){var idx=S.programs.findIndex(function(p){return p.id===pid;});if(idx===-1){toast('غير موجود','err');return;}showConfirm('حذف منتج "'+S.programs[idx].name+'"؟',function(){S.programs.splice(idx,1);saveState();renderSettings();toast('تم الحذف');db.collection('programs').doc(pid).delete();});}
-function addOpt(k){var i=document.getElementById('oa-'+k),v=i.value.trim();if(!v)return;if(S.opts[k].indexOf(v)!==-1){toast('موجود','err');return;}S.opts[k].push(v);saveState();i.value='';renderSettings();toast('✓');}
-function rmOpt(k,idx){S.opts[k].splice(idx,1);saveState();renderSettings();}
+function addOpt(k){var i=document.getElementById('oa-'+k),v=i.value.trim();if(!v)return;if(S.opts[k].indexOf(v)!==-1){toast('موجود','err');return;}S.opts[k].push(v);saveState();i.value='';renderSettings();toast('✓');db.collection('settings').doc('opts').set(S.opts);}
+function rmOpt(k,idx){S.opts[k].splice(idx,1);saveState();renderSettings();db.collection('settings').doc('opts').set(S.opts);}
 
 // ── NAV ─────────────────────────────────────
 function showPage(id,el) {
