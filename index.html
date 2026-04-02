@@ -283,7 +283,41 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <button class="nbtn emp"></button><button class="nbtn" onclick="numPad(0)">٠</button><button class="nbtn del" onclick="numDel()">⌫</button>
       </div>
       <div class="lerr" id="pinErr"></div>
-      <span class="lback" onclick="showStep('list')">← رجوع</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.5rem;">
+        <span class="lback" onclick="showStep('list')">← رجوع</span>
+        <span class="lback" onclick="startForgotPin()" style="color:var(--gr);">نسيت PIN؟</span>
+      </div>
+    </div>
+
+    <div class="lstep" id="step-forgot">
+      <div style="text-align:center;margin-bottom:1rem;">
+        <div class="av" id="forgotAv" style="margin:0 auto .5rem;">؟</div>
+        <div style="font-weight:600;" id="forgotName"></div>
+      </div>
+      <div class="fg" style="margin-bottom:.7rem;">
+        <label class="fl" id="forgotQ" style="font-size:.85rem;color:var(--g3);"></label>
+        <input class="fi" id="forgotA" placeholder="الإجابة..." onkeydown="if(event.key==='Enter')verifySecurityAnswer()">
+      </div>
+      <button class="btn btn-p" onclick="verifySecurityAnswer()" style="width:100%;justify-content:center;">تحقق</button>
+      <div class="lerr" id="forgotErr"></div>
+      <span class="lback" onclick="showStep('pin')">← رجوع</span>
+    </div>
+
+    <div class="lstep" id="step-newpin">
+      <div style="text-align:center;margin-bottom:1rem;">
+        <div style="font-size:1.5rem;">🔑</div>
+        <div style="font-weight:600;font-size:.9rem;color:var(--g3);" id="newpinName"></div>
+      </div>
+      <div class="fg" style="margin-bottom:.5rem;">
+        <label class="fl">PIN الجديد (4 أرقام)</label>
+        <input class="fi" id="newpin1" type="password" placeholder="••••" maxlength="4" inputmode="numeric">
+      </div>
+      <div class="fg" style="margin-bottom:.7rem;">
+        <label class="fl">تأكيد PIN</label>
+        <input class="fi" id="newpin2" type="password" placeholder="••••" maxlength="4" inputmode="numeric" onkeydown="if(event.key==='Enter')saveNewPin()">
+      </div>
+      <button class="btn btn-p" onclick="saveNewPin()" style="width:100%;justify-content:center;">حفظ PIN الجديد</button>
+      <div class="lerr" id="newpinErr"></div>
     </div>
 
     <div class="lstep" id="step-admin">
@@ -560,6 +594,15 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="fg"><label class="fl">الصلاحية</label>
         <select class="fs" id="nu-role"><option value="member">عضو — يوثق فقط</option><option value="admin">Admin — إدارة كاملة</option></select>
       </div>
+      <div class="fg"><label class="fl">سؤال الأمان <span style="color:var(--g1);font-weight:400;">(لاستعادة PIN)</span></label>
+        <select class="fs" id="nu-secQ">
+          <option value="school">ما اسم مدرستك الأولى؟</option>
+          <option value="city">في أي مدينة وُلدت؟</option>
+          <option value="friend">ما اسم أقرب صديق لك؟</option>
+          <option value="color">ما لونك المفضل؟</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">إجابة سؤال الأمان *</label><input class="fi" id="nu-secA" placeholder="الإجابة..."></div>
     </div>
     <div class="mfoot"><button class="btn btn-g" onclick="closeModal('addUser')">إلغاء</button><button class="btn btn-p" onclick="saveNewUser()">إضافة</button></div>
   </div>
@@ -813,15 +856,17 @@ async function saveNewUser() {
   var name=document.getElementById('nu-name').value.trim();
   var pin=document.getElementById('nu-pin').value.trim();
   var role=document.getElementById('nu-role').value;
+  var secQ=document.getElementById('nu-secQ').value;
+  var secA=document.getElementById('nu-secA').value.trim();
   if(!name){toast('أدخل الاسم','err');return;}
   if(!/^\d{4}$/.test(pin)){toast('PIN يجب أن يكون 4 أرقام','err');return;}
-  var sheetsOk=true;
+  if(!secA){toast('أدخل إجابة سؤال الأمان','err');return;}
   var users=lsGet('t8_users')||[];
   if(users.find(function(u){return u.name===name;})){toast('المستخدم موجود مسبقاً','err');return;}
-  var newUser = {name:name, pin:pin, role:role};
+  var newUser = {name:name, pin:pin, role:role, secQ:secQ, secA:secA};
   users.push(newUser); lsSet('t8_users', users);
   db.collection('users').doc(name).set(newUser);
-  document.getElementById('nu-name').value=''; document.getElementById('nu-pin').value='';
+  ['nu-name','nu-pin','nu-secA'].forEach(function(id){document.getElementById(id).value='';});
   closeModal('addUser'); renderUsersPage();
   toast('تمت إضافة '+name+' ✓');
 }
@@ -845,15 +890,68 @@ function deleteUser(name) {
   });
 }
 
-// تغيير PIN — للمستخدم الحالي
+// تغيير PIN — للمستخدم الحالي (يطلب القديم أولاً)
 function changeMyPin() {
-  showInputModal('أدخل PIN الجديد (4 أرقام)', '••••', function(newPin) {
-    if(!/^\d{4}$/.test(newPin)){toast('PIN يجب أن يكون 4 أرقام','err');return;}
+  showInputModal('أدخل PIN الحالي', '••••', function(oldPin) {
     var users = lsGet('t8_users') || [];
     var u = users.find(function(u){return u.name===currentUser;});
-    if(u){ u.pin = newPin; lsSet('t8_users', users); db.collection('users').doc(u.name).set(u); }
-    toast('تم تغيير PIN ✓');
+    if(!u || u.pin !== oldPin){ toast('PIN الحالي غير صحيح','err'); return; }
+    showInputModal('أدخل PIN الجديد (4 أرقام)', '••••', function(newPin) {
+      if(!/^\d{4}$/.test(newPin)){toast('PIN يجب أن يكون 4 أرقام','err');return;}
+      u.pin = newPin; lsSet('t8_users', users); db.collection('users').doc(u.name).set(u);
+      toast('تم تغيير PIN ✓');
+    });
   });
+}
+
+// نسيت PIN — بدء الاستعادة
+var SEC_QUESTIONS = {school:'ما اسم مدرستك الأولى؟', city:'في أي مدينة وُلدت؟', friend:'ما اسم أقرب صديق لك؟', color:'ما لونك المفضل؟'};
+var _forgotUser = null;
+
+function startForgotPin() {
+  if(!pinTgt) return;
+  var users = lsGet('t8_users') || [];
+  var u = users.find(function(u){return u.name===pinTgt.name;});
+  if(!u || !u.secQ || !u.secA){
+    toast('لا يوجد سؤال أمان — اطلب من الأدمن إعادة تعيين PIN','err');
+    return;
+  }
+  _forgotUser = u;
+  document.getElementById('forgotAv').textContent = u.name[0];
+  document.getElementById('forgotName').textContent = u.name;
+  document.getElementById('forgotQ').textContent = SEC_QUESTIONS[u.secQ] || u.secQ;
+  document.getElementById('forgotA').value = '';
+  document.getElementById('forgotErr').textContent = '';
+  showStep('forgot');
+}
+
+function verifySecurityAnswer() {
+  var answer = document.getElementById('forgotA').value.trim();
+  if(!answer){toast('أدخل الإجابة','err');return;}
+  if(!_forgotUser){return;}
+  if(answer === _forgotUser.secA) {
+    document.getElementById('newpinName').textContent = 'تعيين PIN جديد لـ ' + _forgotUser.name;
+    document.getElementById('newpin1').value = '';
+    document.getElementById('newpin2').value = '';
+    document.getElementById('newpinErr').textContent = '';
+    showStep('newpin');
+  } else {
+    document.getElementById('forgotErr').textContent = 'الإجابة غير صحيحة';
+  }
+}
+
+function saveNewPin() {
+  var p1 = document.getElementById('newpin1').value.trim();
+  var p2 = document.getElementById('newpin2').value.trim();
+  if(!/^\d{4}$/.test(p1)){document.getElementById('newpinErr').textContent='PIN يجب أن يكون 4 أرقام';return;}
+  if(p1!==p2){document.getElementById('newpinErr').textContent='الرقمان غير متطابقين';return;}
+  if(!_forgotUser) return;
+  var users = lsGet('t8_users') || [];
+  var u = users.find(function(u){return u.name===_forgotUser.name;});
+  if(u){ u.pin = p1; lsSet('t8_users', users); db.collection('users').doc(u.name).set(u); }
+  toast('تم تعيين PIN جديد ✓ سجّل دخولك الآن');
+  _forgotUser = null;
+  showStep('list');
 }
 
 // إعادة تعيين PIN — للأدمن
@@ -1063,6 +1161,10 @@ function showInputModal(title, placeholder, onOk) {
   var field = document.getElementById('inputModalField');
   field.placeholder = placeholder || '';
   field.value = '';
+  var isPin = placeholder === '••••';
+  field.type = isPin ? 'password' : 'text';
+  field.inputMode = isPin ? 'numeric' : 'text';
+  field.maxLength = isPin ? 4 : 999;
   document.getElementById('inputModalOkBtn').onclick = function() {
     var val = field.value.trim();
     if(!val) return;
@@ -1369,7 +1471,7 @@ initLogin();
   <div class="modal" style="max-width:340px;">
     <div class="mh"><div class="mt" id="inputModalTitle">إدخال</div><button class="mclose" onclick="closeModal('input')">×</button></div>
     <div style="padding:1rem 1.2rem 1.2rem;">
-      <input class="inp" id="inputModalField" style="width:100%;box-sizing:border-box;" placeholder="">
+      <input class="inp" id="inputModalField" style="width:100%;box-sizing:border-box;" placeholder="" autocomplete="off">
       <div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end;">
         <button class="btn btn-g" onclick="closeModal('input')">إلغاء</button>
         <button class="btn btn-p" id="inputModalOkBtn">تأكيد</button>
