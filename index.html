@@ -987,12 +987,11 @@ function renderUsersPage() {
   var pal=['#4ade80','#60a5fa','#f472b6','#fb923c','#a78bfa','#fbbf24'];
   g.innerHTML=users.map(function(u,i){
     var bg=u.role==='admin'?'var(--gr)':pal[i%pal.length];
-    var btns='';
-    if(isAdmin){
-      btns='<div style="display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;">'+
-        (!u.secQ?'<button class="btn btn-g btn-s" onclick="setSecurityQ(\''+eq(u.name)+'\')">🔒 سؤال أمان</button>':'')+
-        '<button class="btn btn-g btn-s" onclick="resetUserPin(\''+eq(u.name)+'\')">🔑 PIN</button><button class="btn btn-r btn-s" onclick="deleteUser(\''+eq(u.name)+'\')">حذف</button></div>';
-    }
+    var btns='<div style="display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;">';
+    if(!u.secQ) btns+='<button class="btn btn-g btn-s" onclick="setSecurityQ(\''+eq(u.name)+'\')">🔒 سؤال أمان</button>';
+    btns+='<button class="btn btn-g btn-s" onclick="resetUserPin(\''+eq(u.name)+'\')">🔑 PIN</button>';
+    if(isAdmin) btns+='<button class="btn btn-r btn-s" onclick="deleteUser(\''+eq(u.name)+'\')">حذف</button>';
+    btns+='</div>';
     return '<div class="ucard"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
       '<div style="width:38px;height:38px;border-radius:50%;background:'+bg+';color:#000;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;">'+u.name[0]+'</div>' +
       '<div><div style="font-weight:600;font-size:.9rem;">'+u.name+'</div><span class="rtag '+u.role+'">'+( u.role==='admin'?'Admin':'عضو')+'</span></div></div>' +
