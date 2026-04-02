@@ -904,6 +904,18 @@ function changeMyPin() {
   });
 }
 
+// إضافة سؤال أمان لمستخدم موجود
+function setSecurityQ(name) {
+  showInputModal('إجابة سؤال الأمان لـ "'+name+'" (ما اسم مدرستك الأولى؟)', 'الإجابة...', function(answer) {
+    if(!answer){toast('أدخل الإجابة','err');return;}
+    var users = lsGet('t8_users') || [];
+    var u = users.find(function(u){return u.name===name;});
+    if(u){ u.secQ = 'school'; u.secA = answer; lsSet('t8_users', users); db.collection('users').doc(u.name).set(u); }
+    renderUsersPage();
+    toast('تم تعيين سؤال الأمان لـ '+name+' ✓');
+  });
+}
+
 // نسيت PIN — بدء الاستعادة
 var SEC_QUESTIONS = {school:'ما اسم مدرستك الأولى؟', city:'في أي مدينة وُلدت؟', friend:'ما اسم أقرب صديق لك؟', color:'ما لونك المفضل؟'};
 var _forgotUser = null;
@@ -975,7 +987,9 @@ function renderUsersPage() {
     return '<div class="ucard"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
       '<div style="width:38px;height:38px;border-radius:50%;background:'+bg+';color:#000;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;">'+u.name[0]+'</div>' +
       '<div><div style="font-weight:600;font-size:.9rem;">'+u.name+'</div><span class="rtag '+u.role+'">'+( u.role==='admin'?'Admin':'عضو')+'</span></div></div>' +
-      '<div style="display:flex;justify-content:flex-end;gap:6px;"><button class="btn btn-g btn-s" onclick="resetUserPin(\''+eq(u.name)+'\')">🔑 تعيين PIN</button><button class="btn btn-r btn-s" onclick="deleteUser(\''+eq(u.name)+'\')">حذف</button></div></div>';
+      '<div style="display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;">'+
+      (!u.secQ?'<button class="btn btn-g btn-s" onclick="setSecurityQ(\''+eq(u.name)+'\')">🔒 سؤال أمان</button>':'')+
+      '<button class="btn btn-g btn-s" onclick="resetUserPin(\''+eq(u.name)+'\')">🔑 PIN</button><button class="btn btn-r btn-s" onclick="deleteUser(\''+eq(u.name)+'\')">حذف</button></div></div>';
   }).join('');
 }
 
