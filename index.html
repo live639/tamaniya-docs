@@ -724,11 +724,15 @@ function showStep(id) {
 }
 
 async function initLogin() {
-  if (currentUser && currentRole) { enterApp(); return; }
   showStep('loading');
   var users;
   try { users = await fetchUsers(); } catch(e) { users = []; }
   renderMemberList(users || []);
+  // لو مسجّل دخول سابقاً — روح مباشرة لشاشة PIN
+  if (currentUser && currentRole) {
+    var u = (users||[]).find(function(u){return u.name===currentUser;});
+    if (u) { selectMember(u.name, u.pin, u.role); return; }
+  }
   showStep('list');
 }
 
