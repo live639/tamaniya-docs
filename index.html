@@ -218,6 +218,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px;}
 @media(max-width:700px){.layout{grid-template-columns:1fr;}nav{display:none;}.stats,.cgrid,.ugrid{grid-template-columns:repeat(2,1fr);}.rptgrid{grid-template-columns:1fr;}}
 </style>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -521,6 +524,17 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <div class="toast" id="toast"></div>
 
 <script>
+// ── FIREBASE ─────────────────────────────────
+firebase.initializeApp({
+  apiKey: "AIzaSyDq7ewoTH4CcnpFhJri_zAUvNJuThoTZbA",
+  authDomain: "tamaniya-pwa.firebaseapp.com",
+  projectId: "tamaniya-pwa",
+  storageBucket: "tamaniya-pwa.firebasestorage.app",
+  messagingSenderId: "878176666784",
+  appId: "1:878176666784:web:be201dd7fbe63e63adb5c5"
+});
+var db = firebase.firestore();
+
 // ── LOGO ────────────────────────────────────
 var ICON_SRC = 'data:image/png;base64,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';
 document.getElementById('loginLogo').src = ICON_SRC;
@@ -653,6 +667,24 @@ function enterApp() {
   document.querySelectorAll('.nitem.admin-only').forEach(function(e){ e.classList.toggle('hidden',!ia); });
   if (SCRIPT_URL) { document.getElementById('scriptUrlIn').value=SCRIPT_URL; setConn(true); }
   renderAll();
+  loadFromFirestore();
+}
+
+async function loadFromFirestore() {
+  try {
+    var results = await Promise.all([
+      db.collection('broadcasts').orderBy('at','desc').get(),
+      db.collection('equipment').get(),
+      db.collection('team').get(),
+      db.collection('programs').get()
+    ]);
+    var bSnap=results[0], eSnap=results[1], tSnap=results[2], pSnap=results[3];
+    if(!bSnap.empty) S.broadcasts = bSnap.docs.map(function(d){return d.data();});
+    if(!eSnap.empty) S.equipment  = eSnap.docs.map(function(d){return d.data();});
+    if(!tSnap.empty) S.team       = tSnap.docs.map(function(d){return d.data();});
+    if(!pSnap.empty) S.programs   = pSnap.docs.map(function(d){return d.data();});
+    saveState(); renderAll();
+  } catch(e) { console.warn('Firestore load failed, using cache', e); }
 }
 
 function logout() {
@@ -694,14 +726,12 @@ async function apiGet(type) {
 // ── USERS ────────────────────────────────────
 async function fetchUsers() {
   try {
-    if(SCRIPT_URL){
-      var res=await apiGet('users');
-      if(res&&res.ok&&res.data&&res.data.length){
-        var users=res.data.map(function(r){return{name:r['الاسم']||'',pin:r['PIN']||'',role:r['الصلاحية']==='admin'?'admin':'member'};}).filter(function(u){return u.name&&u.pin;});
-        lsSet('t8_users',users); return users;
-      }
+    var snap = await db.collection('users').get();
+    if(!snap.empty) {
+      var users = snap.docs.map(function(d){return d.data();});
+      lsSet('t8_users', users); return users;
     }
-  } catch(e) { /* fall through to localStorage cache */ }
+  } catch(e) {}
   return lsGet('t8_users') || DEFAULT_USERS;
 }
 
@@ -714,11 +744,12 @@ async function saveNewUser() {
   var sheetsOk=true;
   var users=lsGet('t8_users')||[];
   if(users.find(function(u){return u.name===name;})){toast('المستخدم موجود مسبقاً','err');return;}
-  if(SCRIPT_URL){var res=await apiPost({action:'add',type:'users',data:{'الاسم':name,'PIN':pin,'الصلاحية':role}});if(!res||!res.ok){sheetsOk=false;}}
-  users.push({name:name,pin:pin,role:role}); lsSet('t8_users',users);
+  var newUser = {name:name, pin:pin, role:role};
+  users.push(newUser); lsSet('t8_users', users);
+  db.collection('users').doc(name).set(newUser);
   document.getElementById('nu-name').value=''; document.getElementById('nu-pin').value='';
   closeModal('addUser'); renderUsersPage();
-  toast(sheetsOk ? 'تمت إضافة '+name+' ✓' : 'تمت الإضافة محلياً (تعذر رفع Sheets)');
+  toast('تمت إضافة '+name+' ✓');
 }
 
 function changeAdminPw() {
@@ -735,7 +766,7 @@ function deleteUser(name) {
   showConfirm('حذف المستخدم "'+name+'"؟', async function(){
     var users=(lsGet('t8_users')||[]).filter(function(u){return u.name!==name;});
     lsSet('t8_users',users);
-    if(SCRIPT_URL) await apiPost({action:'deleteUser',name:name});
+    db.collection('users').doc(name).delete();
     renderUsersPage(); toast('تم حذف المستخدم');
   });
 }
@@ -850,6 +881,7 @@ function addTypeInline() {
     var prog=S.programs.find(function(p){return p.id===pid;});
     if(prog.types.indexOf(name)!==-1){toast('المهمة موجودة مسبقاً','err');return;}
     prog.types.push(name); saveState(); onProgChange();
+    db.collection('programs').doc(pid).set(prog);
     document.getElementById('b-type').value=name; toast('✓');
   });
 }
@@ -882,11 +914,7 @@ function saveTask() {
     notes:document.getElementById('b-notes').value,
     by:currentUser, at:new Date().toISOString()};
   S.broadcasts.unshift(rec); saveState(); closeModal('task'); renderAll(); toast('تم توثيق المهمة ✓');
-  apiPost({action:'add',type:'broadcasts',data:{
-    'المنتج':rec.name,'المهمة':rec.type,'التاريخ':rec.date,
-    'منفذو المهمة':rec.executors.join('، '),
-    'المعدات':rec.equipment.map(function(e){return e.name+'('+e.cond.replace(/[✅⚠️❌📦🔧]\s*/,'')+')';}).join('، '),
-    'ملاحظات':rec.notes}});
+  db.collection('broadcasts').doc(String(rec.id)).set(rec);
 }
 
 function saveEquip() {
@@ -897,22 +925,26 @@ function saveEquip() {
   S.equipment.unshift(rec); saveState(); closeModal('equip');
   ['e-name','e-serial','e-notes'].forEach(function(id){document.getElementById(id).value='';});
   renderEquip(); renderStats(); toast('تمت إضافة المعدة ✓');
+  db.collection('equipment').doc(String(rec.id)).set(rec);
 }
 
 function saveTeamMember() {
   var name=document.getElementById('t-name').value.trim();
   if(!name){toast('أدخل الاسم','err');return;}
-  S.team.unshift({id:Date.now(),name:name,notes:document.getElementById('t-notes').value});
-  saveState(); closeModal('teamMember');
+  var tmember={id:Date.now(),name:name,notes:document.getElementById('t-notes').value};
+  S.team.unshift(tmember); saveState(); closeModal('teamMember');
   ['t-name','t-notes'].forEach(function(id){document.getElementById(id).value='';});
   renderTeam(); renderStats(); toast('✓');
+  db.collection('team').doc(String(tmember.id)).set(tmember);
 }
 
 function saveNewProgram() {
   var name=document.getElementById('np-name').value.trim();
   if(!name){toast('أدخل اسم المنتج','err');return;}
   var types=document.getElementById('np-types').value.split(/[,،]/).map(function(t){return t.trim();}).filter(Boolean);
-  S.programs.push({id:'p'+Date.now(),name:name,types:types}); saveState();
+  var newProg={id:'p'+Date.now(),name:name,types:types};
+  S.programs.push(newProg); saveState();
+  db.collection('programs').doc(newProg.id).set(newProg);
   document.getElementById('np-name').value=''; document.getElementById('np-types').value='';
   closeModal('addprog');
   if(document.getElementById('ov-task').classList.contains('open')) initTaskModal();
@@ -920,9 +952,9 @@ function saveNewProgram() {
 }
 
 // ── DELETE ───────────────────────────────────
-function delTask(id) { showConfirm('حذف هذه المهمة؟',function(){S.broadcasts=S.broadcasts.filter(function(x){return x.id!==id;});saveState();renderAll();toast('تم الحذف');}); }
-function delEquip(id){ showConfirm('حذف هذه المعدة؟',function(){S.equipment=S.equipment.filter(function(x){return x.id!==id;});saveState();renderEquip();renderStats();toast('تم الحذف');}); }
-function delTeam(id) { showConfirm('حذف هذا العضو؟', function(){S.team=S.team.filter(function(x){return x.id!==id;});saveState();renderTeam();renderStats();toast('تم الحذف');}); }
+function delTask(id) { showConfirm('حذف هذه المهمة؟',function(){S.broadcasts=S.broadcasts.filter(function(x){return x.id!==id;});saveState();renderAll();toast('تم الحذف');db.collection('broadcasts').doc(String(id)).delete();}); }
+function delEquip(id){ showConfirm('حذف هذه المعدة؟',function(){S.equipment=S.equipment.filter(function(x){return x.id!==id;});saveState();renderEquip();renderStats();toast('تم الحذف');db.collection('equipment').doc(String(id)).delete();}); }
+function delTeam(id) { showConfirm('حذف هذا العضو؟', function(){S.team=S.team.filter(function(x){return x.id!==id;});saveState();renderTeam();renderStats();toast('تم الحذف');db.collection('team').doc(String(id)).delete();}); }
 
 // ── RENDER ───────────────────────────────────
 function renderAll() {
@@ -1076,7 +1108,7 @@ function renderSettings() {
 }
 function addType(pi){var i=document.getElementById('pt-'+pi),v=i.value.trim();if(!v)return;if(S.programs[pi].types.indexOf(v)!==-1){toast('موجودة','err');return;}S.programs[pi].types.push(v);saveState();i.value='';renderSettings();toast('✓');}
 function delType(pi,ti){S.programs[pi].types.splice(ti,1);saveState();renderSettings();}
-function delProg(pid){var idx=S.programs.findIndex(function(p){return p.id===pid;});if(idx===-1){toast('غير موجود','err');return;}showConfirm('حذف منتج "'+S.programs[idx].name+'"؟',function(){S.programs.splice(idx,1);saveState();renderSettings();toast('تم الحذف');});}
+function delProg(pid){var idx=S.programs.findIndex(function(p){return p.id===pid;});if(idx===-1){toast('غير موجود','err');return;}showConfirm('حذف منتج "'+S.programs[idx].name+'"؟',function(){S.programs.splice(idx,1);saveState();renderSettings();toast('تم الحذف');db.collection('programs').doc(pid).delete();});}
 function addOpt(k){var i=document.getElementById('oa-'+k),v=i.value.trim();if(!v)return;if(S.opts[k].indexOf(v)!==-1){toast('موجود','err');return;}S.opts[k].push(v);saveState();i.value='';renderSettings();toast('✓');}
 function rmOpt(k,idx){S.opts[k].splice(idx,1);saveState();renderSettings();}
 
