@@ -463,8 +463,14 @@ tr:hover td{background:rgba(255,255,255,.02);}
         </div>
         <div class="fg f2"><label class="fl">التاريخ</label><input class="fi" id="b-date" type="date"></div>
         <div class="fg f2">
-          <label class="fl">منفذو المهمة <span style="color:var(--g1);font-weight:400;">(اختر من القائمة)</span></label>
-          <div class="execlist" id="execList"></div>
+          <label class="fl">منفذو المهمة</label>
+          <div class="frow" style="margin-bottom:6px;">
+            <select class="fs" id="exec-pick" onchange="pickExec()">
+              <option value="">— اختر منفذ —</option>
+            </select>
+            <button class="btn btn-g btn-s" onclick="addExecCustom()" style="flex-shrink:0;" title="أضف منفذ جديد">＋</button>
+          </div>
+          <div id="execTags" style="display:flex;flex-wrap:wrap;gap:6px;min-height:10px;"></div>
         </div>
         <div class="fg f2">
           <label class="fl">المعدات والملاحظات <span style="color:var(--g1);font-weight:400;">(اختياري)</span></label>
@@ -853,6 +859,7 @@ function showConfirm(msg,onOk) {
 
 // ── TASK MODAL ───────────────────────────────
 var _selEquip = [];
+var _selExec = [];
 
 function initTaskModal() {
   document.getElementById('b-date').valueAsDate=new Date();
@@ -862,9 +869,11 @@ function initTaskModal() {
   document.getElementById('b-type').innerHTML='<option value="">— اختر المنتج أولاً —</option>';
   document.getElementById('addTypeBtn').style.display='none';
   _selEquip=[];
+  _selExec=[currentUser];
   renderEquipPicker();
   renderEquipTags();
-  renderExecList();
+  renderExecPicker();
+  renderExecTags();
 }
 
 function renderEquipPicker() {
@@ -911,37 +920,63 @@ function renderEquipTags() {
   }).join('');
 }
 
-// قائمة منفذي المهمة — من المستخدمين المسجلين
-function renderExecList() {
-  var container = document.getElementById('execList');
+// قائمة المنفذين — dropdown + tags
+function getAllExecNames() {
   var users = lsGet('t8_users') || [];
-  // أضف أعضاء الفريق غير الموجودين في المستخدمين
   var names = users.map(function(u){return u.name;});
   S.team.forEach(function(m){ if(names.indexOf(m.name)===-1) names.push(m.name); });
+  return names;
+}
 
-  if(!names.length) {
-    container.innerHTML='<div style="color:var(--g1);font-size:.82rem;padding:6px;">لا يوجد أعضاء — أضف من صفحة الفريق أو المستخدمون</div>';
-    return;
-  }
+function renderExecPicker() {
+  var sel = document.getElementById('exec-pick');
+  if(!sel) return;
+  var names = getAllExecNames();
+  sel.innerHTML = '<option value="">— اختر منفذ —</option>' +
+    names.map(function(n){return '<option value="'+eq(n)+'">'+n+'</option>';}).join('');
+}
+
+function pickExec() {
+  var sel = document.getElementById('exec-pick');
+  var val = sel.value; sel.value='';
+  if(!val) return;
+  if(_selExec.indexOf(val)===-1){ _selExec.push(val); renderExecTags(); }
+}
+
+function addExecCustom() {
+  showInputModal('اسم المنفذ', 'مثال: أحمد', function(name){
+    if(_selExec.indexOf(name)===-1){ _selExec.push(name); renderExecTags(); }
+    // أضفه للفريق لو مو موجود
+    var exists = S.team.find(function(m){return m.name===name;});
+    if(!exists){
+      var tmember={id:Date.now(),name:name,notes:''};
+      S.team.unshift(tmember); saveState();
+      db.collection('team').doc(String(tmember.id)).set(tmember);
+      renderExecPicker();
+    }
+  });
+}
+
+function removeExecTag(name) {
+  _selExec = _selExec.filter(function(e){return e!==name;});
+  renderExecTags();
+}
+
+function renderExecTags() {
+  var el = document.getElementById('execTags');
+  if(!el) return;
   var pal=['#4ade80','#60a5fa','#f472b6','#fb923c','#a78bfa','#fbbf24'];
-  container.innerHTML = names.map(function(name, i) {
-    var isMe = (name === currentUser);
-    var c = pal[i % pal.length];
-    return '<label class="execrow">' +
-      '<input type="checkbox" id="ex_'+i+'" value="'+eq(name)+'"'+(isMe?' checked':'')+' style="accent-color:var(--gr);width:16px;height:16px;flex-shrink:0;cursor:pointer;">' +
-      '<div class="execav" style="background:'+c+'25;border:1px solid '+c+'50;">' +
-        '<span style="color:'+c+';">'+name[0]+'</span>' +
-      '</div>' +
-      '<span style="font-size:.88rem;">' + name + (isMe?' <span style="color:var(--g1);font-size:.73rem;">(أنت)</span>':'') + '</span>' +
-      '</label>';
+  el.innerHTML = _selExec.map(function(name,i){
+    var c = pal[i%pal.length];
+    var isMe = name===currentUser;
+    return '<span style="background:'+c+'20;border:1px solid '+c+'40;padding:4px 10px;border-radius:20px;font-size:.78rem;display:flex;align-items:center;gap:5px;">'+
+      '<span style="color:'+c+';font-weight:700;">'+name[0]+'</span>'+name+(isMe?' <span style="color:var(--g1);font-size:.68rem;">(أنت)</span>':'')+
+      '<button onclick="removeExecTag(\''+eq(name)+'\')" style="background:none;border:none;color:var(--g2);cursor:pointer;padding:0;font-size:.85rem;line-height:1;">×</button></span>';
   }).join('');
 }
 
 function getSelectedExecutors() {
-  var checked = document.querySelectorAll('#execList input[type=checkbox]:checked');
-  var result = [];
-  checked.forEach(function(cb){ result.push(cb.value); });
-  return result.length ? result : [currentUser];
+  return _selExec.length ? _selExec : [currentUser];
 }
 
 function renderEquipSelect() {
