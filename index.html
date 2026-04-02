@@ -711,6 +711,13 @@ function numPad(n) {
 }
 function numDel() { pinBuf = pinBuf.slice(0,-1); upDots(); document.getElementById('pinErr').textContent = ''; }
 function upDots() { for (var i=0;i<4;i++) document.getElementById('pd'+i).classList.toggle('on', i < pinBuf.length); }
+
+// دعم الكيبورد لشاشة PIN
+document.addEventListener('keydown', function(e) {
+  if (!document.getElementById('step-pin') || !document.getElementById('step-pin').classList.contains('active')) return;
+  if (e.key >= '0' && e.key <= '9') { numPad(parseInt(e.key)); }
+  else if (e.key === 'Backspace') { numDel(); }
+});
 function checkPin() {
   if (!pinTgt) return;
   if (pinBuf === pinTgt.pin) { doLogin(pinTgt.name, pinTgt.role); }
