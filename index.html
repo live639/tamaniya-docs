@@ -541,6 +541,11 @@ function lsSet(k,v) {
 function lsDel(k)   { localStorage.removeItem(k); }
 
 // ── DEFAULT DATA ─────────────────────────────
+var DEFAULT_USERS = [
+  {name:'حسن الاهدل',    pin:'1234', role:'admin'},
+  {name:'محمد الزهراني', pin:'1234', role:'member'}
+];
+
 var DPROGS = [
   {id:'p1', name:'استديو الجماهير', types:['بث مباشر','تحرير مباشر']},
   {id:'p2', name:'بودكاست ثمانية',  types:['بودكاست','مقابلة']},
@@ -697,7 +702,7 @@ async function fetchUsers() {
       }
     }
   } catch(e) { /* fall through to localStorage cache */ }
-  return lsGet('t8_users')||[];
+  return lsGet('t8_users') || DEFAULT_USERS;
 }
 
 async function saveNewUser() {
