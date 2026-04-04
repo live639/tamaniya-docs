@@ -1478,7 +1478,7 @@ function eq(s){return s.replace(/'/g,"\\'").replace(/"/g,'&quot;');}
 
 function printReport() {
   if(currentRole!=='admin'){toast('ليس لديك صلاحية','err');return;}
-  document.getElementById('printDate').textContent = 'تاريخ الطباعة: ' + new Date().toLocaleDateString('ar-SA-u-nu-latn',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('printDate').textContent = 'تاريخ الطباعة: ' + new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
   document.body.removeAttribute('data-print-section');
   showPage('reports');
   renderReports();
@@ -1486,7 +1486,7 @@ function printReport() {
 }
 
 function printSection(type) {
-  document.getElementById('printDate').textContent = 'تاريخ الطباعة: ' + new Date().toLocaleDateString('ar-SA-u-nu-latn',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('printDate').textContent = 'تاريخ الطباعة: ' + new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
   document.body.setAttribute('data-print-section', type);
   showPage('reports');
   renderReports();
@@ -1528,7 +1528,7 @@ var toastT;
 function toast(msg,type){var el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(type==='err'?' err':'');clearTimeout(toastT);toastT=setTimeout(function(){el.classList.remove('show');},2500);}
 
 // ── INIT ────────────────────────────────────
-document.getElementById('todayLbl').textContent=new Date().toLocaleDateString('ar-SA-u-nu-latn',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+document.getElementById('todayLbl').textContent=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 initLogin();
 
 
