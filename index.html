@@ -1048,8 +1048,12 @@ function showConfirm(msg,onOk) {
 // ── TASK MODAL ───────────────────────────────
 var _selEquip = [];
 var _selExec = [];
+var _editingTaskId = null;
 
 function initTaskModal() {
+  _editingTaskId = null;
+  document.querySelector('#ov-task .mtitle').textContent = '📋 توثيق مهمة';
+  document.querySelector('#ov-task .mfoot .btn-p').textContent = '✓ حفظ المهمة';
   document.getElementById('b-date').valueAsDate=new Date();
   document.getElementById('b-notes').value='';
   var ps=document.getElementById('b-prog');
@@ -1062,6 +1066,28 @@ function initTaskModal() {
   renderEquipTags();
   renderExecPicker();
   renderExecTags();
+}
+
+function editTask(id) {
+  var t = S.broadcasts.find(function(b){return b.id===id;});
+  if(!t){toast('المهمة غير موجودة','err');return;}
+  openModal('task');
+  _editingTaskId = id;
+  document.querySelector('#ov-task .mtitle').textContent = '✏️ تعديل المهمة';
+  document.querySelector('#ov-task .mfoot .btn-p').textContent = '✓ حفظ التعديلات';
+  // تعبئة الحقول
+  var prog = S.programs.find(function(p){return p.name===t.name;});
+  if(prog){
+    document.getElementById('b-prog').value = prog.id;
+    onProgChange();
+    document.getElementById('b-type').value = t.type;
+  }
+  document.getElementById('b-date').value = t.date || '';
+  document.getElementById('b-notes').value = t.notes || '';
+  _selExec = Array.isArray(t.executors) && t.executors.length ? t.executors.slice() : [t.by||currentUser];
+  _selEquip = (Array.isArray(t.equipment)?t.equipment:[]).map(function(e){return e.name||e;});
+  renderExecTags();
+  renderEquipTags();
 }
 
 function renderEquipPicker() {
@@ -1232,6 +1258,20 @@ function saveTask() {
   var type=document.getElementById('b-type').value;
   if(!prog){toast('اختر المنتج','err');return;}
   if(!type){toast('اختر المهمة','err');return;}
+  if(_editingTaskId){
+    var existing = S.broadcasts.find(function(b){return b.id===_editingTaskId;});
+    if(!existing){toast('المهمة غير موجودة','err'); _editingTaskId=null; return;}
+    existing.name = prog.name;
+    existing.type = type;
+    existing.date = document.getElementById('b-date').value;
+    existing.executors = getSelectedExecutors();
+    existing.equipment = _selEquip.map(function(n){return{name:n,cond:''};});
+    existing.notes = document.getElementById('b-notes').value;
+    saveState(); closeModal('task'); renderAll(); toast('تم تحديث المهمة ✓');
+    db.collection('broadcasts').doc(String(existing.id)).set(existing);
+    _editingTaskId = null;
+    return;
+  }
   var rec={id:Date.now(), name:prog.name, type:type,
     date:document.getElementById('b-date').value,
     executors:getSelectedExecutors(),
@@ -1312,7 +1352,7 @@ function renderDash() {
         (eqStr(b)!=='—'?'<div style="color:var(--g2);">'+eqStr(b)+'</div>':'')+
         (b.notes?'<div style="color:var(--g1);margin-top:2px;">'+b.notes+'</div>':(!eqStr(b)||eqStr(b)==='—'?'—':''))+
       '</td>'+
-      '<td><button class="btn btn-g btn-s" onclick="delTask('+b.id+')" style="padding:3px 8px;">×</button></td></tr>';
+      '<td style="white-space:nowrap;"><button class="btn btn-g btn-s" onclick="editTask('+b.id+')" style="padding:3px 8px;margin-left:4px;">✏️</button><button class="btn btn-g btn-s" onclick="delTask('+b.id+')" style="padding:3px 8px;">×</button></td></tr>';
   }).join('');
 }
 
@@ -1340,7 +1380,7 @@ function renderTasks(pf, uf) {
         (eqStr(b)!=='—'?'<div style="color:var(--g2);">'+eqStr(b)+'</div>':'')+
         (b.notes?'<div style="color:var(--g1);margin-top:2px;">'+b.notes+'</div>':(!eqStr(b)||eqStr(b)==='—'?'—':''))+
       '</td>'+
-      '<td><button class="btn btn-g btn-s" onclick="delTask('+b.id+')" style="padding:3px 8px;">×</button></td></tr>';
+      '<td style="white-space:nowrap;"><button class="btn btn-g btn-s" onclick="editTask('+b.id+')" style="padding:3px 8px;margin-left:4px;">✏️</button><button class="btn btn-g btn-s" onclick="delTask('+b.id+')" style="padding:3px 8px;">×</button></td></tr>';
   }).join('');
 }
 
