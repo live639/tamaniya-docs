@@ -364,7 +364,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div class="umenu-item" onclick="changeMyPin();closeUserMenu();">🔑 تغيير كلمة المرور</div>
         <div class="umenu-item" onclick="navTo('equipment');closeUserMenu();">🎛️ المعدات</div>
         <div class="umenu-item" onclick="navTo('team');closeUserMenu();">👥 الفريق</div>
-        <div class="umenu-item" onclick="navTo('reports');closeUserMenu();">📈 التقارير</div>
+        <div class="umenu-item admin-only" onclick="navTo('reports');closeUserMenu();">📈 التقارير</div>
         <div class="umenu-item admin-only" id="adminMenuBtn" onclick="navTo('settings');closeUserMenu();">⚙️ الإعدادات</div>
         <div class="umenu-item admin-only" onclick="navTo('users');closeUserMenu();">👤 المستخدمون</div>
         <div class="umenu-sep"></div>
@@ -520,7 +520,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <svg class="bticon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="12.01"/></svg>
     <span>المعدات</span>
   </div>
-  <div class="btab" data-p="reports" onclick="navTo('reports')">
+  <div class="btab admin-only-tab" data-p="reports" onclick="navTo('reports')">
     <svg class="bticon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
     <span>التقارير</span>
   </div>
@@ -803,8 +803,8 @@ function enterApp() {
   document.getElementById('userAv').textContent   = currentUser[0]||'؟';
   document.getElementById('userAv').className     = 'av'+(currentRole==='admin'?' adm':'');
   var ia = currentRole==='admin';
-  document.querySelectorAll('.admin-only').forEach(function(e){ e.style.display=ia?(e.tagName==='BUTTON'?'flex':''):''  ; if(!ia) e.style.display='none'; });
-  document.querySelectorAll('.nitem.admin-only').forEach(function(e){ e.classList.toggle('hidden',!ia); });
+  document.querySelectorAll('.admin-only').forEach(function(e){ e.style.display=ia?'':'none'; });
+  document.querySelectorAll('.admin-only-tab').forEach(function(e){ e.style.display=ia?'flex':'none'; });
   renderAll();
   loadFromFirestore();
 }
@@ -1496,7 +1496,7 @@ function rmOpt(k,idx){S.opts[k].splice(idx,1);saveState();renderSettings();db.co
 
 // ── NAV ─────────────────────────────────────
 function showPage(id,el) {
-  if((id==='users'||id==='settings')&&currentRole!=='admin'){toast('ليس لديك صلاحية','err');return;}
+  if((id==='users'||id==='settings'||id==='reports')&&currentRole!=='admin'){toast('ليس لديك صلاحية','err');return;}
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   document.getElementById('page-'+id).classList.add('active');
   // تحديث bottom tabs
