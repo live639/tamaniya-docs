@@ -1,6 +1,6 @@
 // sw.js  –  Thamaniya PWA Service Worker
 // IMPORTANT: bump CACHE_NAME after every deployment to force cache refresh
-const CACHE_NAME = 't8-v7';
+const CACHE_NAME = 't8-v8';
 
 const PRECACHE_URLS = [
   './',
@@ -16,10 +16,16 @@ self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
       return cache.addAll(PRECACHE_URLS);
-    }).then(function() {
-      return self.skipWaiting();
     })
   );
+});
+
+// ── MESSAGE ──────────────────────────────────────────────────────────────────
+// Allow client to force skipWaiting for immediate update
+self.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // ── ACTIVATE ─────────────────────────────────────────────────────────────────
@@ -38,26 +44,8 @@ self.addEventListener('activate', function(event) {
 });
 
 // ── FETCH ─────────────────────────────────────────────────────────────────────
-// Strategy: network-only for Google Sheets API, cache-first for everything else
+// Strategy: network-first to ensure updates load immediately (critical for iOS)
 self.addEventListener('fetch', function(event) {
-  var url = event.request.url;
-
-  // Always fetch live for Google Apps Script (cross-origin backend)
-  if (url.indexOf('script.google.com') !== -1 ||
-      url.indexOf('script.googleusercontent.com') !== -1) {
-    event.respondWith(
-      fetch(event.request).catch(function() {
-        // Return structured offline response so apiGet/apiPost callers get null cleanly
-        return new Response(JSON.stringify({ ok: false, msg: 'offline' }), {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      })
-    );
-    return;
-  }
-
-  // Network-first: try network, fallback to cache (ensures updates load immediately)
   event.respondWith(
     fetch(event.request).then(function(networkResponse) {
       if (networkResponse && networkResponse.status === 200 &&

@@ -276,7 +276,10 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="mlist" id="memberList"></div>
       <div id="noUsersMsg" style="display:none;text-align:center;padding:1rem;color:var(--g2);font-size:.85rem;"></div>
       <div class="lsep">أو</div>
-      <div style="text-align:center;"><span class="lback" onclick="showStep('admin')" style="display:inline-block;">🔐 دخول Admin</span></div>
+      <div style="text-align:center;display:flex;flex-direction:column;gap:10px;">
+        <span class="lback" onclick="showStep('join')" style="display:inline-block;color:var(--gr);">📝 طلب انضمام جديد</span>
+        <span class="lback" onclick="showStep('admin')" style="display:inline-block;">🔐 دخول Admin</span>
+      </div>
     </div>
 
     <div class="lstep" id="step-pin">
@@ -313,6 +316,41 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <button class="btn btn-p" onclick="verifySecurityAnswer()" style="width:100%;justify-content:center;">تحقق</button>
       <div class="lerr" id="forgotErr"></div>
       <span class="lback" onclick="showStep('pin')">← رجوع</span>
+    </div>
+
+    <div class="lstep" id="step-join">
+      <div style="text-align:center;margin-bottom:1rem;">
+        <div style="font-size:1.5rem;">📝</div>
+        <div style="font-weight:600;font-size:.95rem;color:var(--g3);">طلب انضمام جديد</div>
+      </div>
+      <div class="fg" style="margin-bottom:.6rem;">
+        <label class="fl">الاسم الكامل</label>
+        <input class="fi" id="j-name" placeholder="الاسم...">
+      </div>
+      <div class="fg" style="margin-bottom:.6rem;">
+        <label class="fl">PIN (4 أرقام)</label>
+        <input class="fi" id="j-pin" type="password" placeholder="••••" maxlength="4" inputmode="numeric">
+      </div>
+      <div class="fg" style="margin-bottom:.6rem;">
+        <label class="fl">تأكيد PIN</label>
+        <input class="fi" id="j-pin2" type="password" placeholder="••••" maxlength="4" inputmode="numeric">
+      </div>
+      <div class="fg" style="margin-bottom:.6rem;">
+        <label class="fl">سؤال الأمان</label>
+        <select class="fs" id="j-secQ">
+          <option value="school">ما اسم مدرستك الأولى؟</option>
+          <option value="city">في أي مدينة وُلدت؟</option>
+          <option value="friend">ما اسم أقرب صديق لك؟</option>
+          <option value="color">ما لونك المفضل؟</option>
+        </select>
+      </div>
+      <div class="fg" style="margin-bottom:.8rem;">
+        <label class="fl">إجابة سؤال الأمان</label>
+        <input class="fi" id="j-secA" placeholder="الإجابة..." onkeydown="if(event.key==='Enter')submitJoinRequest()">
+      </div>
+      <button class="btn btn-p" onclick="submitJoinRequest()" style="width:100%;justify-content:center;">إرسال الطلب</button>
+      <div class="lerr" id="joinErr"></div>
+      <span class="lback" onclick="showStep('list')">← رجوع</span>
     </div>
 
     <div class="lstep" id="step-newpin">
@@ -362,6 +400,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
       <div class="umenu" id="userMenu">
         <div class="umenu-item" onclick="changeMyPin();closeUserMenu();">🔑 تغيير كلمة المرور</div>
+        <div class="umenu-item" onclick="forceUpdate();closeUserMenu();">🔄 تحديث التطبيق</div>
         <div class="umenu-item" onclick="navTo('equipment');closeUserMenu();">🎛️ المعدات</div>
         <div class="umenu-item" onclick="navTo('team');closeUserMenu();">👥 الفريق</div>
         <div class="umenu-item admin-only" onclick="navTo('reports');closeUserMenu();">📈 التقارير</div>
@@ -471,6 +510,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
     <div class="page" id="page-users">
       <div class="ph"><div><div class="phtitle">المستخدمون</div><div class="phsub">Admin فقط</div></div><button class="btn btn-p" onclick="openModal('addUser')">＋ إضافة مستخدم</button></div>
+      <div id="pendingRequests"></div>
       <div class="ugrid" id="usersGrid"></div>
       <div class="tbox">
         <div class="tboxh"><div class="tboxt">🔐 تغيير كلمة مرور Admin</div></div>
@@ -644,6 +684,15 @@ tr:hover td{background:rgba(255,255,255,.02);}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- iOS Install Banner -->
+<div id="iosInstallBanner" style="display:none;position:fixed;bottom:75px;left:10px;right:10px;background:var(--s1);border:1px solid var(--gr3);border-radius:14px;padding:14px 16px;z-index:500;box-shadow:0 8px 30px rgba(0,0,0,.5);align-items:center;gap:10px;">
+  <div style="flex:1;font-size:.82rem;line-height:1.5;color:var(--g3);">
+    <strong style="color:var(--gr);">لتثبيت التطبيق:</strong><br>
+    اضغط على زر المشاركة <span style="display:inline-block;border:1px solid var(--g2);border-radius:5px;padding:1px 5px;">⬆️</span> ثم <strong>"إضافة إلى الشاشة الرئيسية"</strong>
+  </div>
+  <button class="btn btn-g btn-s" onclick="dismissIOSHint()" style="flex-shrink:0;">فهمت</button>
+</div>
 
 <script>
 // ── FIREBASE ─────────────────────────────────
@@ -854,6 +903,13 @@ function loadFromFirestore() {
     renderUsersPage();
     renderMemberList(users);
   }, function(e){ console.warn('users listener error', e); });
+
+  // Join Requests — طلبات الانضمام المعلقة
+  db.collection('joinRequests').onSnapshot(function(snap) {
+    var reqs = snap.docs.map(function(d){return d.data();});
+    lsSet('t8_joinRequests', reqs);
+    renderPendingRequests();
+  }, function(e){ console.warn('joinRequests listener error', e); });
 }
 
 function logout() {
@@ -914,6 +970,76 @@ function deleteUser(name) {
 }
 
 // تغيير PIN — للمستخدم الحالي (يطلب القديم أولاً)
+// ── JOIN REQUESTS ────────────────────────────
+async function submitJoinRequest() {
+  var name = document.getElementById('j-name').value.trim();
+  var pin  = document.getElementById('j-pin').value.trim();
+  var pin2 = document.getElementById('j-pin2').value.trim();
+  var secQ = document.getElementById('j-secQ').value;
+  var secA = document.getElementById('j-secA').value.trim();
+  var err  = document.getElementById('joinErr');
+  err.textContent = '';
+  if(!name){err.textContent='أدخل الاسم';return;}
+  if(!/^\d{4}$/.test(pin)){err.textContent='PIN يجب أن يكون 4 أرقام';return;}
+  if(pin!==pin2){err.textContent='الرقمان غير متطابقين';return;}
+  if(!secA){err.textContent='أدخل إجابة سؤال الأمان';return;}
+  // تحقق من عدم تكرار الاسم
+  var users = lsGet('t8_users') || [];
+  if(users.find(function(u){return u.name===name;})){err.textContent='الاسم موجود مسبقاً — استخدم اسماً آخر';return;}
+  try {
+    var existing = await db.collection('joinRequests').doc(name).get();
+    if(existing.exists){err.textContent='لديك طلب معلق بهذا الاسم';return;}
+    var req = {name:name, pin:pin, role:'member', secQ:secQ, secA:secA, requestedAt:new Date().toISOString()};
+    await db.collection('joinRequests').doc(name).set(req);
+    ['j-name','j-pin','j-pin2','j-secA'].forEach(function(id){document.getElementById(id).value='';});
+    toast('تم إرسال الطلب ✓ بانتظار موافقة الأدمن');
+    showStep('list');
+  } catch(e) {
+    err.textContent = 'فشل الإرسال — حاول مرة أخرى';
+    console.warn('submitJoinRequest', e);
+  }
+}
+
+async function approveRequest(name) {
+  var reqs = lsGet('t8_joinRequests') || [];
+  var r = reqs.find(function(x){return x.name===name;});
+  if(!r){toast('الطلب غير موجود','err');return;}
+  var user = {name:r.name, pin:r.pin, role:'member', secQ:r.secQ||'', secA:r.secA||''};
+  await db.collection('users').doc(name).set(user);
+  await db.collection('joinRequests').doc(name).delete();
+  toast('تم قبول '+name+' ✓');
+}
+
+function rejectRequest(name) {
+  showConfirm('رفض طلب "'+name+'"؟', async function(){
+    await db.collection('joinRequests').doc(name).delete();
+    toast('تم رفض الطلب');
+  });
+}
+
+function renderPendingRequests() {
+  var el = document.getElementById('pendingRequests');
+  if(!el) return;
+  if(currentRole !== 'admin'){el.innerHTML='';return;}
+  var reqs = lsGet('t8_joinRequests') || [];
+  if(!reqs.length){el.innerHTML='';return;}
+  el.innerHTML = '<div class="seclbl" style="color:var(--gr);">طلبات انضمام معلقة ('+reqs.length+')</div>'+
+    '<div class="ugrid" style="margin-bottom:1.2rem;">'+
+    reqs.map(function(r){
+      return '<div class="ucard" style="border-color:var(--gr3);">'+
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'+
+          '<div style="width:38px;height:38px;border-radius:50%;background:var(--gr2);color:var(--gr);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;">'+esc(r.name)[0]+'</div>'+
+          '<div><div style="font-weight:600;font-size:.9rem;">'+esc(r.name)+'</div><div style="color:var(--g2);font-size:.72rem;">'+(r.requestedAt||'').slice(0,10)+'</div></div>'+
+        '</div>'+
+        '<div style="display:flex;gap:6px;">'+
+          '<button class="btn btn-p btn-s" onclick="approveRequest(\''+eq(r.name)+'\')">✓ قبول</button>'+
+          '<button class="btn btn-r btn-s" onclick="rejectRequest(\''+eq(r.name)+'\')">✕ رفض</button>'+
+        '</div>'+
+      '</div>';
+    }).join('')+
+    '</div>';
+}
+
 function changeMyPin() {
   showInputModal('أدخل PIN الحالي', '••••', function(oldPin) {
     var users = lsGet('t8_users') || [];
@@ -1596,16 +1722,37 @@ initLogin();
 </div>
 <!-- PWA: Service Worker Registration -->
 <script>
+var swRegistration = null;
+var _reloadingForUpdate = false;
+
 if ('serviceWorker' in navigator) {
+  // إعادة تحميل تلقائياً عند تفعيل SW جديد
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    if (_reloadingForUpdate) return;
+    _reloadingForUpdate = true;
+    window.location.reload();
+  });
+
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('./sw.js', { scope: './' })
       .then(function(registration) {
+        swRegistration = registration;
+
+        // فحص تحديثات كل مرة تفتح التطبيق
+        registration.update();
+
         registration.addEventListener('updatefound', function() {
           var nw = registration.installing;
+          if (!nw) return;
           nw.addEventListener('statechange', function() {
             if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-              var toastEl=document.getElementById('toast');
-              if(toastEl){toastEl.textContent='يتوفر تحديث جديد — أعد تحميل الصفحة ✓';toastEl.className='toast show';setTimeout(function(){toastEl.classList.remove('show');},4000);}
+              // تحديث جديد جاهز — فعّله فوراً (iOS-friendly)
+              nw.postMessage({ type: 'SKIP_WAITING' });
+              var toastEl = document.getElementById('toast');
+              if (toastEl) {
+                toastEl.textContent = 'جاري تطبيق التحديث...';
+                toastEl.className = 'toast show';
+              }
             }
           });
         });
@@ -1613,6 +1760,51 @@ if ('serviceWorker' in navigator) {
       .catch(function(err) { console.warn('SW registration failed:', err); });
   });
 }
+
+// دالة تحديث قسرية من القائمة المنسدلة
+async function forceUpdate() {
+  var toastEl = document.getElementById('toast');
+  if (toastEl) { toastEl.textContent = 'جاري التحديث...'; toastEl.className = 'toast show'; }
+  try {
+    if (swRegistration) {
+      await swRegistration.update();
+      if (swRegistration.waiting) {
+        swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        return;
+      }
+    }
+    // لو ما فيه SW جديد: امسح الكاش وأعد التحميل
+    if ('caches' in window) {
+      var keys = await caches.keys();
+      await Promise.all(keys.map(function(k){ return caches.delete(k); }));
+    }
+    setTimeout(function(){ window.location.reload(); }, 300);
+  } catch (e) {
+    console.warn('forceUpdate failed', e);
+    window.location.reload();
+  }
+}
+
+// iOS install banner
+function checkIOSInstallHint() {
+  var ua = navigator.userAgent || '';
+  var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  var isStandalone = window.navigator.standalone === true ||
+                     window.matchMedia('(display-mode: standalone)').matches;
+  var seen = localStorage.getItem('ios_install_hint_seen');
+  if (isIOS && !isStandalone && !seen) {
+    setTimeout(function(){
+      var banner = document.getElementById('iosInstallBanner');
+      if (banner) banner.style.display = 'flex';
+    }, 1500);
+  }
+}
+function dismissIOSHint() {
+  localStorage.setItem('ios_install_hint_seen', '1');
+  var b = document.getElementById('iosInstallBanner');
+  if (b) b.style.display = 'none';
+}
+window.addEventListener('load', checkIOSInstallHint);
 </script>
 </body>
 </html>
