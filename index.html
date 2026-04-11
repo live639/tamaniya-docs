@@ -683,6 +683,25 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
 </div>
 
+<div class="overlay" id="ov-secq">
+  <div class="modal sm">
+    <div class="mhead"><div class="mtitle">🔒 سؤال الأمان</div><button class="mclose" onclick="closeModal('secq')">✕</button></div>
+    <div class="mbody">
+      <div class="fg"><label class="fl">المستخدم</label><div id="sq-name" style="padding:8px 0;font-weight:600;color:var(--gr);"></div></div>
+      <div class="fg"><label class="fl">اختر السؤال</label>
+        <select class="fs" id="sq-q">
+          <option value="school">ما اسم مدرستك الأولى؟</option>
+          <option value="city">في أي مدينة وُلدت؟</option>
+          <option value="friend">ما اسم أقرب صديق لك؟</option>
+          <option value="color">ما لونك المفضل؟</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">الإجابة *</label><input class="fi" id="sq-a" placeholder="الإجابة..."></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-g" onclick="closeModal('secq')">إلغاء</button><button class="btn btn-p" onclick="saveSecurityQ()">حفظ</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- iOS Install Banner -->
@@ -971,7 +990,9 @@ function deleteUser(name) {
 
 // تغيير PIN — للمستخدم الحالي (يطلب القديم أولاً)
 // ── JOIN REQUESTS ────────────────────────────
+var _joinSubmitting = false;
 async function submitJoinRequest() {
+  if(_joinSubmitting) return;
   var name = document.getElementById('j-name').value.trim();
   var pin  = document.getElementById('j-pin').value.trim();
   var pin2 = document.getElementById('j-pin2').value.trim();
@@ -983,20 +1004,24 @@ async function submitJoinRequest() {
   if(!/^\d{4}$/.test(pin)){err.textContent='PIN يجب أن يكون 4 أرقام';return;}
   if(pin!==pin2){err.textContent='الرقمان غير متطابقين';return;}
   if(!secA){err.textContent='أدخل إجابة سؤال الأمان';return;}
-  // تحقق من عدم تكرار الاسم
   var users = lsGet('t8_users') || [];
   if(users.find(function(u){return u.name===name;})){err.textContent='الاسم موجود مسبقاً — استخدم اسماً آخر';return;}
+  _joinSubmitting = true;
+  err.textContent = 'جاري الإرسال...';
   try {
     var existing = await db.collection('joinRequests').doc(name).get();
-    if(existing.exists){err.textContent='لديك طلب معلق بهذا الاسم';return;}
+    if(existing.exists){err.textContent='لديك طلب معلق بهذا الاسم';_joinSubmitting=false;return;}
     var req = {name:name, pin:pin, role:'member', secQ:secQ, secA:secA, requestedAt:new Date().toISOString()};
     await db.collection('joinRequests').doc(name).set(req);
     ['j-name','j-pin','j-pin2','j-secA'].forEach(function(id){document.getElementById(id).value='';});
+    err.textContent = '';
     toast('تم إرسال الطلب ✓ بانتظار موافقة الأدمن');
     showStep('list');
   } catch(e) {
     err.textContent = 'فشل الإرسال — حاول مرة أخرى';
     console.warn('submitJoinRequest', e);
+  } finally {
+    _joinSubmitting = false;
   }
 }
 
@@ -1005,15 +1030,25 @@ async function approveRequest(name) {
   var r = reqs.find(function(x){return x.name===name;});
   if(!r){toast('الطلب غير موجود','err');return;}
   var user = {name:r.name, pin:r.pin, role:'member', secQ:r.secQ||'', secA:r.secA||''};
-  await db.collection('users').doc(name).set(user);
-  await db.collection('joinRequests').doc(name).delete();
-  toast('تم قبول '+name+' ✓');
+  try {
+    await db.collection('users').doc(name).set(user);
+    await db.collection('joinRequests').doc(name).delete();
+    toast('تم قبول '+name+' ✓');
+  } catch(e) {
+    toast('فشل القبول — حاول مرة أخرى','err');
+    console.warn('approveRequest', e);
+  }
 }
 
 function rejectRequest(name) {
   showConfirm('رفض طلب "'+name+'"؟', async function(){
-    await db.collection('joinRequests').doc(name).delete();
-    toast('تم رفض الطلب');
+    try {
+      await db.collection('joinRequests').doc(name).delete();
+      toast('تم رفض الطلب');
+    } catch(e) {
+      toast('فشل الرفض','err');
+      console.warn('rejectRequest', e);
+    }
   });
 }
 
@@ -1054,15 +1089,44 @@ function changeMyPin() {
 }
 
 // إضافة سؤال أمان لمستخدم موجود
+// فتح نافذة تعديل سؤال الأمان
+var _secQTargetName = null;
 function setSecurityQ(name) {
-  showInputModal('إجابة سؤال الأمان لـ "'+name+'" (ما اسم مدرستك الأولى؟)', 'الإجابة...', function(answer) {
-    if(!answer){toast('أدخل الإجابة','err');return;}
-    var users = lsGet('t8_users') || [];
-    var u = users.find(function(u){return u.name===name;});
-    if(u){ u.secQ = 'school'; u.secA = answer; lsSet('t8_users', users); db.collection('users').doc(u.name).set(u); }
+  // العضو يعدّل سؤاله فقط، الأدمن يعدّل لأي شخص
+  if(currentRole !== 'admin' && name !== currentUser) {
+    toast('ليس لديك صلاحية','err'); return;
+  }
+  var users = lsGet('t8_users') || [];
+  var u = users.find(function(u){return u.name===name;});
+  if(!u){toast('المستخدم غير موجود','err');return;}
+  _secQTargetName = name;
+  document.getElementById('sq-name').textContent = name;
+  document.getElementById('sq-q').value = u.secQ || 'school';
+  document.getElementById('sq-a').value = u.secA || '';
+  document.getElementById('ov-secq').classList.add('open');
+}
+
+async function saveSecurityQ() {
+  var name = _secQTargetName;
+  var q = document.getElementById('sq-q').value;
+  var a = document.getElementById('sq-a').value.trim();
+  if(!name){return;}
+  if(!a){toast('أدخل الإجابة','err');return;}
+  var users = lsGet('t8_users') || [];
+  var u = users.find(function(u){return u.name===name;});
+  if(!u){toast('المستخدم غير موجود','err');return;}
+  u.secQ = q;
+  u.secA = a;
+  try {
+    await db.collection('users').doc(name).set(u);
+    lsSet('t8_users', users);
+    closeModal('secq');
     renderUsersPage();
-    toast('تم تعيين سؤال الأمان لـ '+name+' ✓');
-  });
+    toast('تم حفظ سؤال الأمان ✓');
+  } catch(e) {
+    toast('فشل الحفظ — حاول مرة أخرى','err');
+    console.warn('saveSecurityQ', e);
+  }
 }
 
 // نسيت PIN — بدء الاستعادة
@@ -1137,7 +1201,7 @@ function renderUsersPage() {
   g.innerHTML=users.map(function(u,i){
     var bg=u.role==='admin'?'var(--gr)':pal[i%pal.length];
     var btns='<div style="display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;">';
-    if(!u.secQ) btns+='<button class="btn btn-g btn-s" onclick="setSecurityQ(\''+eq(u.name)+'\')">🔒 سؤال أمان</button>';
+    btns+='<button class="btn btn-g btn-s" onclick="setSecurityQ(\''+eq(u.name)+'\')">🔒 سؤال الأمان</button>';
     btns+='<button class="btn btn-g btn-s" onclick="resetUserPin(\''+eq(u.name)+'\')">🔑 PIN</button>';
     if(isAdmin) btns+='<button class="btn btn-r btn-s" onclick="deleteUser(\''+eq(u.name)+'\')">حذف</button>';
     btns+='</div>';
