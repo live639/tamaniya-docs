@@ -509,7 +509,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
 
     <div class="page" id="page-users">
-      <div class="ph"><div><div class="phtitle">المستخدمون</div><div class="phsub">Admin فقط</div></div><button class="btn btn-p" onclick="openModal('addUser')">＋ إضافة مستخدم</button></div>
+      <div class="ph"><div><div class="phtitle">المستخدمون</div><div class="phsub">Admin فقط</div></div></div>
       <div id="pendingRequests"></div>
       <div class="ugrid" id="usersGrid"></div>
       <div class="tbox">
@@ -652,28 +652,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
 </div>
 
-<div class="overlay" id="ov-addUser">
-  <div class="modal sm">
-    <div class="mhead"><div class="mtitle">👤 إضافة مستخدم</div><button class="mclose" onclick="closeModal('addUser')">✕</button></div>
-    <div class="mbody">
-      <div class="fg"><label class="fl">الاسم *</label><input class="fi" id="nu-name" placeholder="الاسم الكامل"></div>
-      <div class="fg"><label class="fl">PIN (4 أرقام) *</label><input class="fi" id="nu-pin" type="password" placeholder="••••" maxlength="4" inputmode="numeric"></div>
-      <div class="fg"><label class="fl">الصلاحية</label>
-        <select class="fs" id="nu-role"><option value="member">عضو — يوثق فقط</option><option value="admin">Admin — إدارة كاملة</option></select>
-      </div>
-      <div class="fg"><label class="fl">سؤال الأمان <span style="color:var(--g1);font-weight:400;">(لاستعادة PIN)</span></label>
-        <select class="fs" id="nu-secQ">
-          <option value="school">ما اسم مدرستك الأولى؟</option>
-          <option value="city">في أي مدينة وُلدت؟</option>
-          <option value="friend">ما اسم أقرب صديق لك؟</option>
-          <option value="color">ما لونك المفضل؟</option>
-        </select>
-      </div>
-      <div class="fg"><label class="fl">إجابة سؤال الأمان *</label><input class="fi" id="nu-secA" placeholder="الإجابة..."></div>
-    </div>
-    <div class="mfoot"><button class="btn btn-g" onclick="closeModal('addUser')">إلغاء</button><button class="btn btn-p" onclick="saveNewUser()">إضافة</button></div>
-  </div>
-</div>
 
 <div class="overlay" id="ov-confirm">
   <div class="modal sm">
@@ -875,6 +853,8 @@ function enterApp() {
   document.querySelectorAll('.admin-only-tab').forEach(function(e){ e.style.display=ia?'flex':'none'; });
   renderAll();
   loadFromFirestore();
+  // حفظ عدد المهام الحالي لكشف الجديد لاحقاً
+  lsSet('t8_lastTaskCount', S.broadcasts.length);
 }
 
 // debounce — يمنع إعادة الرسم المتكررة
@@ -886,11 +866,20 @@ function debouncedRender() {
 
 function loadFromFirestore() {
   // Broadcasts — admin يرى الكل، العضو يرى اضافاته فقط
+  var _firstBroadcastLoad = true;
   db.collection('broadcasts').orderBy('at','desc').onSnapshot(function(snap) {
     var all = snap.docs.map(function(d){return d.data();});
     S.broadcasts = currentRole === 'admin'
       ? all
       : all.filter(function(b){ return (Array.isArray(b.executors)?b.executors:[b.by]).indexOf(currentUser) !== -1; });
+    // إشعار بالمهام الجديدة
+    var lastCount = lsGet('t8_lastTaskCount') || 0;
+    if(_firstBroadcastLoad && S.broadcasts.length > lastCount) {
+      var diff = S.broadcasts.length - lastCount;
+      if(diff > 0 && lastCount > 0) toast(diff + ' مهمة جديدة منذ آخر زيارة');
+    }
+    if(!_firstBroadcastLoad) lsSet('t8_lastTaskCount', S.broadcasts.length);
+    _firstBroadcastLoad = false;
     saveState(); debouncedRender();
   }, function(e){ console.warn('broadcasts listener error', e); });
 
@@ -924,10 +913,20 @@ function loadFromFirestore() {
   }, function(e){ console.warn('users listener error', e); });
 
   // Join Requests — طلبات الانضمام المعلقة
+  var _firstJoinLoad = true;
   db.collection('joinRequests').onSnapshot(function(snap) {
     var reqs = snap.docs.map(function(d){return d.data();});
     lsSet('t8_joinRequests', reqs);
     renderPendingRequests();
+    // إشعار للأدمن عند وجود طلبات
+    if(currentRole === 'admin' && reqs.length > 0) {
+      if(_firstJoinLoad) {
+        toast('لديك '+reqs.length+' طلب انضمام معلق');
+      } else {
+        toast('طلب انضمام جديد!');
+      }
+    }
+    _firstJoinLoad = false;
   }, function(e){ console.warn('joinRequests listener error', e); });
 }
 
@@ -950,23 +949,24 @@ async function fetchUsers() {
   return lsGet('t8_users') || DEFAULT_USERS;
 }
 
-async function saveNewUser() {
-  var name=document.getElementById('nu-name').value.trim();
-  var pin=document.getElementById('nu-pin').value.trim();
-  var role=document.getElementById('nu-role').value;
-  var secQ=document.getElementById('nu-secQ').value;
-  var secA=document.getElementById('nu-secA').value.trim();
-  if(!name){toast('أدخل الاسم','err');return;}
-  if(!/^\d{4}$/.test(pin)){toast('PIN يجب أن يكون 4 أرقام','err');return;}
-  if(!secA){toast('أدخل إجابة سؤال الأمان','err');return;}
-  var users=lsGet('t8_users')||[];
-  if(users.find(function(u){return u.name===name;})){toast('المستخدم موجود مسبقاً','err');return;}
-  var newUser = {name:name, pin:pin, role:role, secQ:secQ, secA:secA};
-  users.push(newUser); lsSet('t8_users', users);
-  db.collection('users').doc(name).set(newUser);
-  ['nu-name','nu-pin','nu-secA'].forEach(function(id){document.getElementById(id).value='';});
-  closeModal('addUser'); renderUsersPage();
-  toast('تمت إضافة '+name+' ✓');
+// ترقية/تنزيل صلاحية مستخدم
+async function toggleRole(name) {
+  var users = lsGet('t8_users') || [];
+  var u = users.find(function(u){return u.name===name;});
+  if(!u){toast('غير موجود','err');return;}
+  var newRole = u.role === 'admin' ? 'member' : 'admin';
+  var label = newRole === 'admin' ? 'ترقية لـ Admin' : 'تحويل لعضو';
+  showConfirm(label+' — '+name+'؟', async function(){
+    u.role = newRole;
+    try {
+      await db.collection('users').doc(name).set(u);
+      lsSet('t8_users', users);
+      renderUsersPage();
+      toast('تم تغيير صلاحية '+name+' ✓');
+    } catch(e) {
+      toast('فشل التغيير','err');
+    }
+  });
 }
 
 function changeAdminPw() {
@@ -1203,6 +1203,7 @@ function renderUsersPage() {
     var btns='<div style="display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;">';
     btns+='<button class="btn btn-g btn-s" onclick="setSecurityQ(\''+eq(u.name)+'\')">🔒 سؤال الأمان</button>';
     btns+='<button class="btn btn-g btn-s" onclick="resetUserPin(\''+eq(u.name)+'\')">🔑 PIN</button>';
+    if(isAdmin) btns+='<button class="btn btn-g btn-s" onclick="toggleRole(\''+eq(u.name)+'\')">'+(u.role==='admin'?'👤 تنزيل':'⭐ ترقية')+'</button>';
     if(isAdmin) btns+='<button class="btn btn-r btn-s" onclick="deleteUser(\''+eq(u.name)+'\')">حذف</button>';
     btns+='</div>';
     return '<div class="ucard"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
@@ -1215,7 +1216,6 @@ function renderUsersPage() {
 // ── MODALS ───────────────────────────────────
 function openModal(id) {
   if(id==='task')    initTaskModal();
-  if(id==='addUser') renderUsersPage();
   document.getElementById('ov-'+id).classList.add('open');
 }
 function closeModal(id) { document.getElementById('ov-'+id).classList.remove('open'); }
