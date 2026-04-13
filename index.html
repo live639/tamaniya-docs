@@ -237,6 +237,11 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px;}
 @media(max-width:700px){.stats,.cgrid,.ugrid{grid-template-columns:repeat(2,1fr);}.rptgrid{grid-template-columns:1fr;}}
+@media(max-width:600px){
+  .ph{flex-direction:column;align-items:stretch;gap:.7rem;}
+  .phact{width:100%;flex-wrap:wrap;justify-content:flex-start;}
+  .phact .btn{flex:1 1 auto;justify-content:center;min-width:0;}
+}
 .print-header{display:none;}
 @media print{
   nav,.header,.phact,.btn,.tabs,.srch,.toast,.stats,.overlay,.btabs,.umenu{display:none!important;}
@@ -1705,7 +1710,8 @@ function renderTeam() {
 var _ru='all', _rp='all', _rmonth='all';
 
 // ── حالة صفحة التقارير (قائمة بفلاتر) ─────────
-var _lprog='all', _lyear='all', _lmonth='all', _lexec='all', _ltype='all', _lequip='all';
+// _lmoNum هو رقم الشهر فقط ('01'..'12'), _lyear هو السنة ('YYYY'), كلاهما مستقل
+var _lprog='all', _lyear='all', _lmoNum='all', _lexec='all', _ltype='all', _lequip='all';
 
 // تحويل "2026-04" إلى "أبريل 2026"
 function formatMonthLabel(m){
@@ -1718,14 +1724,14 @@ function formatMonthLabel(m){
 
 function fRMonth(m){ _rmonth=m; renderAnalytics(); }
 
-// فلاتر قائمة التقارير — كل واحدة تُعيد رسم القائمة فقط
+// فلاتر قائمة التقارير — الشهر والسنة مستقلّان تماماً
 function fLProg(p){ _lprog=p; renderReports(); }
-function fLYear(y){ _lyear=y; _lmonth='all'; renderReports(); }
-function fLMonth(m){ _lmonth=m; if(m!=='all') _lyear=m.slice(0,4); renderReports(); }
+function fLMonthNum(m){ _lmoNum=m; renderReports(); }
+function fLYear(y){ _lyear=y; renderReports(); }
 function fLExec(e){ _lexec=e; renderReports(); }
 function fLType(t){ _ltype=t; renderReports(); }
 function fLEquip(q){ _lequip=q; renderReports(); }
-function resetListFilters(){ _lprog='all'; _lyear='all'; _lmonth='all'; _lexec='all'; _ltype='all'; _lequip='all'; var s=document.getElementById('lRSearch'); if(s) s.value=''; renderReports(); }
+function resetListFilters(){ _lprog='all'; _lyear='all'; _lmoNum='all'; _lexec='all'; _ltype='all'; _lequip='all'; var s=document.getElementById('lRSearch'); if(s) s.value=''; renderReports(); }
 
 // قائمة broadcasts بعد تطبيق فلتر الشهر — تُستخدم في لوحة القيادة/الطباعة
 function _filteredBroadcasts(){
@@ -1734,14 +1740,15 @@ function _filteredBroadcasts(){
     : S.broadcasts.filter(function(r){return r.date && r.date.slice(0,7)===_rmonth;});
 }
 
-// تطبيق فلاتر قائمة التقارير على مصفوفة broadcasts
+// تطبيق فلاتر قائمة التقارير — الشهر والسنة مستقلّان ويُطبّقان معاً
 function _applyListFilters(arr){
   return arr.filter(function(r){
     if(_lprog!=='all' && r.name!==_lprog) return false;
-    if(_lmonth!=='all'){
-      if(!r.date||r.date.slice(0,7)!==_lmonth) return false;
-    } else if(_lyear!=='all'){
-      if(!r.date||r.date.slice(0,4)!==_lyear) return false;
+    if(_lmoNum!=='all'){
+      if(!r.date || r.date.length<7 || r.date.slice(5,7)!==_lmoNum) return false;
+    }
+    if(_lyear!=='all'){
+      if(!r.date || r.date.length<4 || r.date.slice(0,4)!==_lyear) return false;
     }
     if(_lexec!=='all'){
       var execs=Array.isArray(r.executors)?r.executors:[r.by];
@@ -1756,42 +1763,51 @@ function _applyListFilters(arr){
   });
 }
 
-// رسم تقويم الشهر: صفوف السنوات + شبكة 12 شهر للسنة المختارة
+// رسم تقويم التاريخ: شبكة 12 شهر (أساسية) + صف السنوات (ثانوي، مستقل)
 function _renderMonthCalendar(all){
-  var monthCounts={};
-  all.forEach(function(r){ if(r.date) monthCounts[r.date.slice(0,7)]=(monthCounts[r.date.slice(0,7)]||0)+1; });
-  var years={};
-  Object.keys(monthCounts).forEach(function(m){ var y=m.slice(0,4); years[y]=(years[y]||0)+monthCounts[m]; });
-  var yearList=Object.keys(years).sort().reverse();
+  var monthTotals={};   // '01'..'12' → عدد المهام في هذا الشهر عبر كل السنوات
+  var yearTotals={};    // 'YYYY'    → عدد المهام في هذه السنة عبر كل الأشهر
+  all.forEach(function(r){
+    if(r.date && r.date.length>=7){
+      var mm=r.date.slice(5,7);
+      var yy=r.date.slice(0,4);
+      monthTotals[mm]=(monthTotals[mm]||0)+1;
+      yearTotals[yy]=(yearTotals[yy]||0)+1;
+    }
+  });
 
-  // تطبيع الحالة
-  if(_lyear!=='all' && yearList.indexOf(_lyear)===-1){ _lyear='all'; _lmonth='all'; }
-  if(_lmonth!=='all' && _lyear!==_lmonth.slice(0,4)) _lyear=_lmonth.slice(0,4);
+  // تطبيع الحالة — لو الاختيار ما عاد موجود في البيانات ارجع للكل
+  if(_lmoNum!=='all' && !monthTotals[_lmoNum]) _lmoNum='all';
+  if(_lyear!=='all' && !yearTotals[_lyear]) _lyear='all';
 
   var names=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
   var totalAll=all.length;
 
-  var yt='<button class="yrbtn'+(_lyear==='all'?' active':'')+'" onclick="fLYear(\'all\')">الكل ('+totalAll+')</button>';
-  yearList.forEach(function(y){
-    yt+='<button class="yrbtn'+(_lyear===y?' active':'')+'" onclick="fLYear(\''+eq(y)+'\')">'+esc(y)+' ('+years[y]+')</button>';
-  });
-
-  var html='<div class="calyrs">'+yt+'</div>';
-  if(_lyear!=='all'){
-    var mg='';
-    for(var i=0;i<12;i++){
-      var mm=(i+1<10?'0':'')+(i+1);
-      var ym=_lyear+'-'+mm;
-      var c=monthCounts[ym]||0;
-      var disabled=c===0;
-      var active=_lmonth===ym;
-      mg+='<div class="calcell'+(active?' active':'')+(disabled?' disabled':'')+'"'+
-        (disabled?'':' onclick="fLMonth(\''+eq(ym)+'\')"')+
-        '><div class="cname">'+names[i]+'</div><div class="cnt">'+(c||'—')+'</div></div>';
-    }
-    html+='<div class="calgrid">'+mg+'</div>';
-    html+='<button class="calall'+(_lmonth==='all'?' active':'')+'" onclick="fLMonth(\'all\')">كل أشهر '+esc(_lyear)+'</button>';
+  // شبكة 12 شهر (دائماً ظاهرة)
+  var mg='';
+  for(var i=0;i<12;i++){
+    var mm=(i+1<10?'0':'')+(i+1);
+    var c=monthTotals[mm]||0;
+    var disabled=c===0;
+    var active=_lmoNum===mm;
+    mg+='<div class="calcell'+(active?' active':'')+(disabled?' disabled':'')+'"'+
+      (disabled?'':' onclick="fLMonthNum(\''+mm+'\')"')+
+      '><div class="cname">'+names[i]+'</div><div class="cnt">'+(c||'—')+'</div></div>';
   }
+
+  var html='<div class="calgrid">'+mg+'</div>';
+  html+='<button class="calall'+(_lmoNum==='all'?' active':'')+'" onclick="fLMonthNum(\'all\')">كل الأشهر ('+totalAll+')</button>';
+
+  // صف السنوات (مستقل عن الشهر)
+  var yearList=Object.keys(yearTotals).sort().reverse();
+  if(yearList.length){
+    var yt='<button class="yrbtn'+(_lyear==='all'?' active':'')+'" onclick="fLYear(\'all\')">كل السنوات ('+totalAll+')</button>';
+    yearList.forEach(function(y){
+      yt+='<button class="yrbtn'+(_lyear===y?' active':'')+'" onclick="fLYear(\''+eq(y)+'\')">'+esc(y)+' ('+yearTotals[y]+')</button>';
+    });
+    html+='<div class="calyrs" style="margin-top:.8rem;">'+yt+'</div>';
+  }
+
   document.getElementById('lRMonthGrid').innerHTML=html;
 }
 
@@ -2078,10 +2094,11 @@ function _setReportsPrintHeader(){
   if(d) d.textContent = 'تاريخ الطباعة: ' + new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
   var pf=document.getElementById('printFiltersR');
   if(pf){
+    var names=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
     var parts=[];
     if(_lprog!=='all') parts.push('المنتج: '+_lprog);
-    if(_lmonth!=='all') parts.push('الشهر: '+formatMonthLabel(_lmonth));
-    else if(_lyear!=='all') parts.push('السنة: '+_lyear);
+    if(_lmoNum!=='all') parts.push('الشهر: '+(names[parseInt(_lmoNum,10)-1]||_lmoNum));
+    if(_lyear!=='all') parts.push('السنة: '+_lyear);
     if(_lexec!=='all') parts.push('المنفذ: '+_lexec);
     if(_ltype!=='all') parts.push('نوع المهمة: '+_ltype);
     if(_lequip!=='all') parts.push('المعدة: '+_lequip);
@@ -2125,8 +2142,8 @@ function exportExcel() {
     filteredBs = _applyListFilters(S.broadcasts);
     var parts=[];
     if(_lprog!=='all') parts.push(_lprog);
-    if(_lmonth!=='all') parts.push(_lmonth);
-    else if(_lyear!=='all') parts.push(_lyear);
+    if(_lmoNum!=='all') parts.push('m'+_lmoNum);
+    if(_lyear!=='all') parts.push(_lyear);
     if(_lexec!=='all') parts.push(_lexec);
     if(_ltype!=='all') parts.push(_ltype);
     if(_lequip!=='all') parts.push(_lequip);
