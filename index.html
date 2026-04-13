@@ -604,7 +604,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         </div>
       </div>
     </div>
-    <div class="mfoot"><button class="btn btn-g" onclick="closeModal('task')">إلغاء</button><button class="btn btn-p" onclick="saveTask()">✓ حفظ المهمة</button></div>
+    <div class="mfoot"><button class="btn btn-r btn-s" id="taskDelBtn" onclick="delTaskFromModal()" style="display:none;">🗑️ حذف</button><button class="btn btn-g" onclick="closeModal('task')">إلغاء</button><button class="btn btn-p" onclick="saveTask()">✓ حفظ المهمة</button></div>
   </div>
 </div>
 
@@ -1237,6 +1237,7 @@ function initTaskModal() {
   _editingTaskId = null;
   document.querySelector('#ov-task .mtitle').textContent = '📋 توثيق مهمة';
   document.querySelector('#ov-task .mfoot .btn-p').textContent = '✓ حفظ المهمة';
+  document.getElementById('taskDelBtn').style.display = 'none';
   document.getElementById('b-date').valueAsDate=new Date();
   document.getElementById('b-notes').value='';
   var ps=document.getElementById('b-prog');
@@ -1258,6 +1259,7 @@ function editTask(id) {
   _editingTaskId = id;
   document.querySelector('#ov-task .mtitle').textContent = '✏️ تعديل المهمة';
   document.querySelector('#ov-task .mfoot .btn-p').textContent = '✓ حفظ التعديلات';
+  document.getElementById('taskDelBtn').style.display = 'inline-flex';
   // تعبئة الحقول
   var prog = S.programs.find(function(p){return p.name===t.name;});
   if(prog){
@@ -1501,6 +1503,19 @@ function saveNewProgram() {
 
 // ── DELETE ───────────────────────────────────
 function delTask(id) { showConfirm('حذف هذه المهمة؟',function(){S.broadcasts=S.broadcasts.filter(function(x){return x.id!==id;});saveState();renderAll();toast('تم الحذف');db.collection('broadcasts').doc(String(id)).delete();}); }
+function delTaskFromModal() {
+  if(!_editingTaskId) return;
+  var id = _editingTaskId;
+  showConfirm('حذف هذه المهمة؟', function(){
+    S.broadcasts = S.broadcasts.filter(function(x){return x.id!==id;});
+    saveState();
+    closeModal('task');
+    renderAll();
+    toast('تم الحذف');
+    db.collection('broadcasts').doc(String(id)).delete();
+    _editingTaskId = null;
+  });
+}
 function delEquip(id){ showConfirm('حذف هذه المعدة؟',function(){S.equipment=S.equipment.filter(function(x){return x.id!==id;});saveState();renderEquip();renderStats();toast('تم الحذف');db.collection('equipment').doc(String(id)).delete();}); }
 function delTeam(id) { showConfirm('حذف هذا العضو؟', function(){S.team=S.team.filter(function(x){return x.id!==id;});saveState();renderTeam();renderStats();toast('تم الحذف');db.collection('team').doc(String(id)).delete();}); }
 
@@ -1535,7 +1550,7 @@ function renderDash() {
         (eqStr(b)!=='—'?'<div style="color:var(--g2);">'+eqStr(b)+'</div>':'')+
         (b.notes?'<div style="color:var(--g1);margin-top:2px;">'+esc(b.notes)+'</div>':(!eqStr(b)||eqStr(b)==='—'?'—':''))+
       '</td>'+
-      '<td style="white-space:nowrap;"><button class="btn btn-g btn-s" onclick="editTask('+b.id+')" style="padding:3px 8px;margin-left:4px;">✏️</button><button class="btn btn-g btn-s" onclick="delTask('+b.id+')" style="padding:3px 8px;">×</button></td></tr>';
+      '<td><button class="btn btn-g btn-s" onclick="editTask('+b.id+')" style="padding:3px 8px;">✏️</button></td></tr>';
   }).join('');
 }
 
@@ -1563,7 +1578,7 @@ function renderTasks(pf, uf) {
         (eqStr(b)!=='—'?'<div style="color:var(--g2);">'+eqStr(b)+'</div>':'')+
         (b.notes?'<div style="color:var(--g1);margin-top:2px;">'+esc(b.notes)+'</div>':(!eqStr(b)||eqStr(b)==='—'?'—':''))+
       '</td>'+
-      '<td style="white-space:nowrap;"><button class="btn btn-g btn-s" onclick="editTask('+b.id+')" style="padding:3px 8px;margin-left:4px;">✏️</button><button class="btn btn-g btn-s" onclick="delTask('+b.id+')" style="padding:3px 8px;">×</button></td></tr>';
+      '<td><button class="btn btn-g btn-s" onclick="editTask('+b.id+')" style="padding:3px 8px;">✏️</button></td></tr>';
   }).join('');
 }
 
