@@ -495,10 +495,16 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
       <div class="seclbl">المنتج</div>
       <div class="tabs" id="lRProgTabs" style="margin-bottom:.7rem;"></div>
-      <div class="seclbl">الشهر</div>
-      <div class="calwrap" id="lRMonthGrid"></div>
       <div class="seclbl">المنفذ</div>
       <div class="tabs" id="lRExecTabs" style="margin-bottom:.9rem;"></div>
+      <div class="fgrid" style="margin-bottom:1rem;">
+        <div class="fg"><label class="fl">الشهر</label>
+          <select class="fs" id="lRMonthSel" onchange="fLMonthNum(this.value)"><option value="all">كل الأشهر</option></select>
+        </div>
+        <div class="fg"><label class="fl">السنة</label>
+          <select class="fs" id="lRYearSel" onchange="fLYear(this.value)"><option value="all">كل السنوات</option></select>
+        </div>
+      </div>
       <div class="fgrid" style="margin-bottom:1rem;">
         <div class="fg"><label class="fl">نوع المهمة</label>
           <select class="fs" id="lRTypeSel" onchange="fLType(this.value)"><option value="all">الكل</option></select>
@@ -1763,10 +1769,10 @@ function _applyListFilters(arr){
   });
 }
 
-// رسم تقويم التاريخ: شبكة 12 شهر (أساسية) + صف السنوات (ثانوي، مستقل)
-function _renderMonthCalendar(all){
-  var monthTotals={};   // '01'..'12' → عدد المهام في هذا الشهر عبر كل السنوات
-  var yearTotals={};    // 'YYYY'    → عدد المهام في هذه السنة عبر كل الأشهر
+// فلاتر التاريخ: قائمتان منسدلتان (شهر + سنة)، مستقلّتان
+function _renderDateFilters(all){
+  var monthTotals={};   // '01'..'12' → العدد عبر كل السنوات
+  var yearTotals={};    // 'YYYY'    → العدد عبر كل الأشهر
   all.forEach(function(r){
     if(r.date && r.date.length>=7){
       var mm=r.date.slice(5,7);
@@ -1783,32 +1789,31 @@ function _renderMonthCalendar(all){
   var names=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
   var totalAll=all.length;
 
-  // شبكة 12 شهر (دائماً ظاهرة)
-  var mg='';
-  for(var i=0;i<12;i++){
-    var mm=(i+1<10?'0':'')+(i+1);
-    var c=monthTotals[mm]||0;
-    var disabled=c===0;
-    var active=_lmoNum===mm;
-    mg+='<div class="calcell'+(active?' active':'')+(disabled?' disabled':'')+'"'+
-      (disabled?'':' onclick="fLMonthNum(\''+mm+'\')"')+
-      '><div class="cname">'+names[i]+'</div><div class="cnt">'+(c||'—')+'</div></div>';
+  // قائمة الشهر — نعرض فقط الأشهر اللي فيها بيانات
+  var mSel=document.getElementById('lRMonthSel');
+  if(mSel){
+    var mHtml='<option value="all">كل الأشهر ('+totalAll+')</option>';
+    for(var i=0;i<12;i++){
+      var mm=(i+1<10?'0':'')+(i+1);
+      var c=monthTotals[mm]||0;
+      if(!c) continue;
+      mHtml+='<option value="'+mm+'">'+esc(names[i])+' ('+c+')</option>';
+    }
+    mSel.innerHTML=mHtml;
+    mSel.value=_lmoNum;
   }
 
-  var html='<div class="calgrid">'+mg+'</div>';
-  html+='<button class="calall'+(_lmoNum==='all'?' active':'')+'" onclick="fLMonthNum(\'all\')">كل الأشهر ('+totalAll+')</button>';
-
-  // صف السنوات (مستقل عن الشهر)
-  var yearList=Object.keys(yearTotals).sort().reverse();
-  if(yearList.length){
-    var yt='<button class="yrbtn'+(_lyear==='all'?' active':'')+'" onclick="fLYear(\'all\')">كل السنوات ('+totalAll+')</button>';
+  // قائمة السنة
+  var ySel=document.getElementById('lRYearSel');
+  if(ySel){
+    var yearList=Object.keys(yearTotals).sort().reverse();
+    var yHtml='<option value="all">كل السنوات ('+totalAll+')</option>';
     yearList.forEach(function(y){
-      yt+='<button class="yrbtn'+(_lyear===y?' active':'')+'" onclick="fLYear(\''+eq(y)+'\')">'+esc(y)+' ('+yearTotals[y]+')</button>';
+      yHtml+='<option value="'+esc(y)+'">'+esc(y)+' ('+yearTotals[y]+')</option>';
     });
-    html+='<div class="calyrs" style="margin-top:.8rem;">'+yt+'</div>';
+    ySel.innerHTML=yHtml;
+    ySel.value=_lyear;
   }
-
-  document.getElementById('lRMonthGrid').innerHTML=html;
 }
 
 // ── صفحة التقارير الجديدة — قائمة مهام مع فلاتر ───
@@ -1826,8 +1831,8 @@ function renderReports() {
   });
   document.getElementById('lRProgTabs').innerHTML=pt;
 
-  // --- تقويم الشهر (سنوات + شبكة 12 شهر) ---
-  _renderMonthCalendar(all);
+  // --- قوائم الشهر والسنة المنسدلة ---
+  _renderDateFilters(all);
 
   // --- تبويبات المنفذ (مدموجة بالتطبيع) ---
   var execMap={};
