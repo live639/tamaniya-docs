@@ -174,6 +174,25 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .tab:hover{color:var(--w);border-color:var(--g1);}
 .tab.active{background:var(--gr2);color:var(--gr);border-color:var(--gr3);font-weight:600;}
 
+/* Calendar-style month picker */
+.calwrap{background:var(--s1);border:1px solid var(--s3);border-radius:14px;padding:.9rem;margin-bottom:1rem;}
+.calyrs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.7rem;}
+.yrbtn{background:var(--s2);border:1px solid var(--s3);color:var(--g3);padding:6px 14px;border-radius:20px;font-size:.82rem;transition:all .13s;cursor:pointer;}
+.yrbtn:hover{color:var(--w);border-color:var(--g1);}
+.yrbtn.active{background:var(--gr2);color:var(--gr);border-color:var(--gr3);font-weight:700;}
+.calgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:.6rem;}
+.calcell{background:var(--s2);border:1px solid var(--s3);color:var(--g3);padding:10px 4px;border-radius:10px;cursor:pointer;text-align:center;transition:all .13s;}
+.calcell:hover{border-color:var(--g1);color:var(--w);}
+.calcell.active{background:var(--gr2);border-color:var(--gr3);color:var(--gr);}
+.calcell.disabled{opacity:.35;cursor:default;pointer-events:none;}
+.calcell .cname{font-size:.8rem;font-weight:600;}
+.calcell .cnt{font-size:.7rem;color:var(--g2);margin-top:3px;}
+.calcell.active .cnt{color:var(--gr);}
+.calall{width:100%;background:var(--s2);border:1px solid var(--s3);color:var(--g3);padding:7px;border-radius:10px;cursor:pointer;font-size:.82rem;transition:all .13s;}
+.calall:hover{border-color:var(--g1);color:var(--w);}
+.calall.active{background:var(--gr2);border-color:var(--gr3);color:var(--gr);font-weight:600;}
+@media(max-width:600px){.calgrid{grid-template-columns:repeat(3,1fr);}}
+
 .rptgrid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.5rem;}
 .rptcard{background:var(--s1);border:1px solid var(--s3);border-radius:16px;padding:1.2rem;}
 .rptlbl{font-weight:600;color:var(--g2);font-size:.76rem;letter-spacing:.05em;margin-bottom:1rem;}
@@ -403,7 +422,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div class="umenu-item" onclick="forceUpdate();closeUserMenu();">🔄 تحديث التطبيق</div>
         <div class="umenu-item" onclick="navTo('equipment');closeUserMenu();">🎛️ المعدات</div>
         <div class="umenu-item" onclick="navTo('team');closeUserMenu();">👥 الفريق</div>
-        <div class="umenu-item admin-only" onclick="navTo('reports');closeUserMenu();">📈 التقارير</div>
+        <div class="umenu-item" onclick="navTo('reports');closeUserMenu();">📈 التقارير</div>
         <div class="umenu-item admin-only" id="adminMenuBtn" onclick="navTo('settings');closeUserMenu();">⚙️ الإعدادات</div>
         <div class="umenu-item admin-only" onclick="navTo('users');closeUserMenu();">👤 المستخدمون</div>
         <div class="umenu-sep"></div>
@@ -462,21 +481,27 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div id="printFiltersR" style="font-size:.78rem;color:#555;margin-top:3px;"></div>
       </div>
       <div class="ph">
-        <div><div class="phtitle">التقارير</div><div class="phsub">قائمة المهام — فلترة حسب الشهر/المنفذ/المهمة/المعدة</div></div>
+        <div><div class="phtitle">التقارير</div><div class="phsub">قائمة المهام — فلترة حسب المنتج/الشهر/المنفذ/المهمة/المعدة</div></div>
         <div class="phact" style="gap:8px;">
           <button class="btn btn-p admin-only" onclick="navTo('analytics')">📊 لوحة القيادة</button>
-          <button class="btn btn-g admin-only" onclick="printReport()">🖨️ PDF</button>
-          <button class="btn btn-g admin-only" onclick="exportExcel()">📋 Excel</button>
+          <button class="btn btn-g" onclick="printReport()">🖨️ PDF</button>
+          <button class="btn btn-g" onclick="exportExcel()">📋 Excel</button>
         </div>
       </div>
+      <div class="seclbl">المنتج</div>
+      <div class="tabs" id="lRProgTabs" style="margin-bottom:.7rem;"></div>
       <div class="seclbl">الشهر</div>
-      <div class="tabs" id="lRMonthTabs" style="margin-bottom:.7rem;"></div>
+      <div class="calwrap" id="lRMonthGrid"></div>
       <div class="seclbl">المنفذ</div>
-      <div class="tabs" id="lRExecTabs" style="margin-bottom:.7rem;"></div>
-      <div class="seclbl">نوع المهمة</div>
-      <div class="tabs" id="lRTypeTabs" style="margin-bottom:.7rem;"></div>
-      <div class="seclbl">المعدة</div>
-      <div class="tabs" id="lREquipTabs" style="margin-bottom:1.1rem;"></div>
+      <div class="tabs" id="lRExecTabs" style="margin-bottom:.9rem;"></div>
+      <div class="fgrid" style="margin-bottom:1rem;">
+        <div class="fg"><label class="fl">نوع المهمة</label>
+          <select class="fs" id="lRTypeSel" onchange="fLType(this.value)"><option value="all">الكل</option></select>
+        </div>
+        <div class="fg"><label class="fl">المعدة</label>
+          <select class="fs" id="lREquipSel" onchange="fLEquip(this.value)"><option value="all">الكل</option></select>
+        </div>
+      </div>
       <div class="tbox">
         <div class="tboxh">
           <div class="tboxt">سجل المهام <span id="lRCount" style="color:var(--g2);font-size:.78rem;margin-right:6px;"></span></div>
@@ -599,7 +624,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <svg class="bticon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="12.01"/></svg>
     <span>المعدات</span>
   </div>
-  <div class="btab admin-only-tab" data-p="reports" onclick="navTo('reports')">
+  <div class="btab" data-p="reports" onclick="navTo('reports')">
     <svg class="bticon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
     <span>التقارير</span>
   </div>
@@ -1680,7 +1705,7 @@ function renderTeam() {
 var _ru='all', _rp='all', _rmonth='all';
 
 // ── حالة صفحة التقارير (قائمة بفلاتر) ─────────
-var _lmonth='all', _lexec='all', _ltype='all', _lequip='all';
+var _lprog='all', _lyear='all', _lmonth='all', _lexec='all', _ltype='all', _lequip='all';
 
 // تحويل "2026-04" إلى "أبريل 2026"
 function formatMonthLabel(m){
@@ -1694,11 +1719,13 @@ function formatMonthLabel(m){
 function fRMonth(m){ _rmonth=m; renderAnalytics(); }
 
 // فلاتر قائمة التقارير — كل واحدة تُعيد رسم القائمة فقط
-function fLMonth(m){ _lmonth=m; renderReports(); }
+function fLProg(p){ _lprog=p; renderReports(); }
+function fLYear(y){ _lyear=y; _lmonth='all'; renderReports(); }
+function fLMonth(m){ _lmonth=m; if(m!=='all') _lyear=m.slice(0,4); renderReports(); }
 function fLExec(e){ _lexec=e; renderReports(); }
 function fLType(t){ _ltype=t; renderReports(); }
 function fLEquip(q){ _lequip=q; renderReports(); }
-function resetListFilters(){ _lmonth='all'; _lexec='all'; _ltype='all'; _lequip='all'; var s=document.getElementById('lRSearch'); if(s) s.value=''; renderReports(); }
+function resetListFilters(){ _lprog='all'; _lyear='all'; _lmonth='all'; _lexec='all'; _ltype='all'; _lequip='all'; var s=document.getElementById('lRSearch'); if(s) s.value=''; renderReports(); }
 
 // قائمة broadcasts بعد تطبيق فلتر الشهر — تُستخدم في لوحة القيادة/الطباعة
 function _filteredBroadcasts(){
@@ -1710,7 +1737,12 @@ function _filteredBroadcasts(){
 // تطبيق فلاتر قائمة التقارير على مصفوفة broadcasts
 function _applyListFilters(arr){
   return arr.filter(function(r){
-    if(_lmonth!=='all' && (!r.date||r.date.slice(0,7)!==_lmonth)) return false;
+    if(_lprog!=='all' && r.name!==_lprog) return false;
+    if(_lmonth!=='all'){
+      if(!r.date||r.date.slice(0,7)!==_lmonth) return false;
+    } else if(_lyear!=='all'){
+      if(!r.date||r.date.slice(0,4)!==_lyear) return false;
+    }
     if(_lexec!=='all'){
       var execs=Array.isArray(r.executors)?r.executors:[r.by];
       if(!execs.some(function(x){return normName(x)===_lexec;})) return false;
@@ -1724,20 +1756,62 @@ function _applyListFilters(arr){
   });
 }
 
+// رسم تقويم الشهر: صفوف السنوات + شبكة 12 شهر للسنة المختارة
+function _renderMonthCalendar(all){
+  var monthCounts={};
+  all.forEach(function(r){ if(r.date) monthCounts[r.date.slice(0,7)]=(monthCounts[r.date.slice(0,7)]||0)+1; });
+  var years={};
+  Object.keys(monthCounts).forEach(function(m){ var y=m.slice(0,4); years[y]=(years[y]||0)+monthCounts[m]; });
+  var yearList=Object.keys(years).sort().reverse();
+
+  // تطبيع الحالة
+  if(_lyear!=='all' && yearList.indexOf(_lyear)===-1){ _lyear='all'; _lmonth='all'; }
+  if(_lmonth!=='all' && _lyear!==_lmonth.slice(0,4)) _lyear=_lmonth.slice(0,4);
+
+  var names=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var totalAll=all.length;
+
+  var yt='<button class="yrbtn'+(_lyear==='all'?' active':'')+'" onclick="fLYear(\'all\')">الكل ('+totalAll+')</button>';
+  yearList.forEach(function(y){
+    yt+='<button class="yrbtn'+(_lyear===y?' active':'')+'" onclick="fLYear(\''+eq(y)+'\')">'+esc(y)+' ('+years[y]+')</button>';
+  });
+
+  var html='<div class="calyrs">'+yt+'</div>';
+  if(_lyear!=='all'){
+    var mg='';
+    for(var i=0;i<12;i++){
+      var mm=(i+1<10?'0':'')+(i+1);
+      var ym=_lyear+'-'+mm;
+      var c=monthCounts[ym]||0;
+      var disabled=c===0;
+      var active=_lmonth===ym;
+      mg+='<div class="calcell'+(active?' active':'')+(disabled?' disabled':'')+'"'+
+        (disabled?'':' onclick="fLMonth(\''+eq(ym)+'\')"')+
+        '><div class="cname">'+names[i]+'</div><div class="cnt">'+(c||'—')+'</div></div>';
+    }
+    html+='<div class="calgrid">'+mg+'</div>';
+    html+='<button class="calall'+(_lmonth==='all'?' active':'')+'" onclick="fLMonth(\'all\')">كل أشهر '+esc(_lyear)+'</button>';
+  }
+  document.getElementById('lRMonthGrid').innerHTML=html;
+}
+
 // ── صفحة التقارير الجديدة — قائمة مهام مع فلاتر ───
 function renderReports() {
   var all=S.broadcasts;
 
-  // --- تبويبات الشهر ---
-  var monthSet={};
-  all.forEach(function(r){ if(r.date) monthSet[r.date.slice(0,7)]=true; });
-  var months=Object.keys(monthSet).sort().reverse();
-  if(_lmonth!=='all' && months.indexOf(_lmonth)===-1) _lmonth='all';
-  var mt='<button class="tab'+(_lmonth==='all'?' active':'')+'" onclick="fLMonth(\'all\')">الكل</button>';
-  months.forEach(function(m){
-    mt+='<button class="tab'+(_lmonth===m?' active':'')+'" onclick="fLMonth(\''+eq(m)+'\')">'+esc(formatMonthLabel(m))+'</button>';
+  // --- تبويبات المنتج (من المهام الموثقة فعلياً + المنتجات المعرّفة) ---
+  var progSet={};
+  all.forEach(function(r){ if(r.name) progSet[r.name]=(progSet[r.name]||0)+1; });
+  var progs=Object.keys(progSet).sort();
+  if(_lprog!=='all' && progs.indexOf(_lprog)===-1) _lprog='all';
+  var pt='<button class="tab'+(_lprog==='all'?' active':'')+'" onclick="fLProg(\'all\')">الكل ('+all.length+')</button>';
+  progs.forEach(function(p){
+    pt+='<button class="tab'+(_lprog===p?' active':'')+'" onclick="fLProg(\''+eq(p)+'\')">'+esc(p)+' ('+progSet[p]+')</button>';
   });
-  document.getElementById('lRMonthTabs').innerHTML=mt;
+  document.getElementById('lRProgTabs').innerHTML=pt;
+
+  // --- تقويم الشهر (سنوات + شبكة 12 شهر) ---
+  _renderMonthCalendar(all);
 
   // --- تبويبات المنفذ (مدموجة بالتطبيع) ---
   var execMap={};
@@ -1756,18 +1830,18 @@ function renderReports() {
   });
   document.getElementById('lRExecTabs').innerHTML=et;
 
-  // --- تبويبات نوع المهمة ---
+  // --- قائمة منسدلة لنوع المهمة ---
   var typeSet={};
   all.forEach(function(r){ if(r.type) typeSet[r.type]=true; });
   var types=Object.keys(typeSet).sort();
   if(_ltype!=='all' && types.indexOf(_ltype)===-1) _ltype='all';
-  var tt='<button class="tab'+(_ltype==='all'?' active':'')+'" onclick="fLType(\'all\')">الكل</button>';
-  types.forEach(function(t){
-    tt+='<button class="tab'+(_ltype===t?' active':'')+'" onclick="fLType(\''+eq(t)+'\')">'+esc(t)+'</button>';
-  });
-  document.getElementById('lRTypeTabs').innerHTML=tt;
+  var tSel=document.getElementById('lRTypeSel');
+  var tHtml='<option value="all">الكل</option>';
+  types.forEach(function(t){ tHtml+='<option value="'+esc(t)+'">'+esc(t)+'</option>'; });
+  tSel.innerHTML=tHtml;
+  tSel.value=_ltype;
 
-  // --- تبويبات المعدة (من المعدات المستخدمة فعلياً) ---
+  // --- قائمة منسدلة للمعدات (من المعدات المستخدمة فعلياً) ---
   var equipSet={};
   all.forEach(function(r){
     if(Array.isArray(r.equipment)) r.equipment.forEach(function(e){
@@ -1777,11 +1851,11 @@ function renderReports() {
   });
   var equips=Object.keys(equipSet).sort();
   if(_lequip!=='all' && equips.indexOf(_lequip)===-1) _lequip='all';
-  var qt='<button class="tab'+(_lequip==='all'?' active':'')+'" onclick="fLEquip(\'all\')">الكل</button>';
-  equips.forEach(function(q){
-    qt+='<button class="tab'+(_lequip===q?' active':'')+'" onclick="fLEquip(\''+eq(q)+'\')">'+esc(q)+'</button>';
-  });
-  document.getElementById('lREquipTabs').innerHTML=qt;
+  var qSel=document.getElementById('lREquipSel');
+  var qHtml='<option value="all">الكل</option>';
+  equips.forEach(function(q){ qHtml+='<option value="'+esc(q)+'">'+esc(q)+'</option>'; });
+  qSel.innerHTML=qHtml;
+  qSel.value=_lequip;
 
   // --- تطبيق الفلاتر + البحث ---
   var filtered=_applyListFilters(all);
@@ -1940,7 +2014,7 @@ function rmOpt(k,idx){S.opts[k].splice(idx,1);saveState();renderSettings();db.co
 
 // ── NAV ─────────────────────────────────────
 function showPage(id,el) {
-  if((id==='users'||id==='settings'||id==='reports'||id==='analytics')&&currentRole!=='admin'){toast('ليس لديك صلاحية','err');return;}
+  if((id==='users'||id==='settings'||id==='analytics')&&currentRole!=='admin'){toast('ليس لديك صلاحية','err');return;}
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   var target=document.getElementById('page-'+id);
   if(!target){ console.warn('unknown page', id); return; }
@@ -2005,7 +2079,9 @@ function _setReportsPrintHeader(){
   var pf=document.getElementById('printFiltersR');
   if(pf){
     var parts=[];
+    if(_lprog!=='all') parts.push('المنتج: '+_lprog);
     if(_lmonth!=='all') parts.push('الشهر: '+formatMonthLabel(_lmonth));
+    else if(_lyear!=='all') parts.push('السنة: '+_lyear);
     if(_lexec!=='all') parts.push('المنفذ: '+_lexec);
     if(_ltype!=='all') parts.push('نوع المهمة: '+_ltype);
     if(_lequip!=='all') parts.push('المعدة: '+_lequip);
@@ -2013,9 +2089,8 @@ function _setReportsPrintHeader(){
   }
 }
 
-// طباعة قائمة التقارير (الصفحة الجديدة)
+// طباعة قائمة التقارير (الصفحة الجديدة) — متاحة للأعضاء والأدمن
 function printReport() {
-  if(currentRole!=='admin'){toast('ليس لديك صلاحية','err');return;}
   _setReportsPrintHeader();
   document.body.removeAttribute('data-print-section');
   showPage('reports');
@@ -2043,14 +2118,15 @@ function printSection(type) {
 }
 
 function exportExcel() {
-  if(currentRole!=='admin'){toast('ليس لديك صلاحية','err');return;}
-  // لو المستخدم في صفحة التقارير نستخدم فلاتر القائمة، وإلا نستخدم فلتر لوحة القيادة
+  // متاح للأعضاء والأدمن — العضو يصدّر مهامه الخاصة فقط (listener يفلتر البيانات أصلاً)
   var onReports = document.getElementById('page-reports').classList.contains('active');
   var filteredBs, monthSuffix;
   if(onReports){
     filteredBs = _applyListFilters(S.broadcasts);
     var parts=[];
+    if(_lprog!=='all') parts.push(_lprog);
     if(_lmonth!=='all') parts.push(_lmonth);
+    else if(_lyear!=='all') parts.push(_lyear);
     if(_lexec!=='all') parts.push(_lexec);
     if(_ltype!=='all') parts.push(_ltype);
     if(_lequip!=='all') parts.push(_lequip);
