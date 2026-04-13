@@ -174,24 +174,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .tab:hover{color:var(--w);border-color:var(--g1);}
 .tab.active{background:var(--gr2);color:var(--gr);border-color:var(--gr3);font-weight:600;}
 
-/* Calendar-style month picker */
-.calwrap{background:var(--s1);border:1px solid var(--s3);border-radius:14px;padding:.9rem;margin-bottom:1rem;}
-.calyrs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.7rem;}
-.yrbtn{background:var(--s2);border:1px solid var(--s3);color:var(--g3);padding:6px 14px;border-radius:20px;font-size:.82rem;transition:all .13s;cursor:pointer;}
-.yrbtn:hover{color:var(--w);border-color:var(--g1);}
-.yrbtn.active{background:var(--gr2);color:var(--gr);border-color:var(--gr3);font-weight:700;}
-.calgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:.6rem;}
-.calcell{background:var(--s2);border:1px solid var(--s3);color:var(--g3);padding:10px 4px;border-radius:10px;cursor:pointer;text-align:center;transition:all .13s;}
-.calcell:hover{border-color:var(--g1);color:var(--w);}
-.calcell.active{background:var(--gr2);border-color:var(--gr3);color:var(--gr);}
-.calcell.disabled{opacity:.35;cursor:default;pointer-events:none;}
-.calcell .cname{font-size:.8rem;font-weight:600;}
-.calcell .cnt{font-size:.7rem;color:var(--g2);margin-top:3px;}
-.calcell.active .cnt{color:var(--gr);}
-.calall{width:100%;background:var(--s2);border:1px solid var(--s3);color:var(--g3);padding:7px;border-radius:10px;cursor:pointer;font-size:.82rem;transition:all .13s;}
-.calall:hover{border-color:var(--g1);color:var(--w);}
-.calall.active{background:var(--gr2);border-color:var(--gr3);color:var(--gr);font-weight:600;}
-@media(max-width:600px){.calgrid{grid-template-columns:repeat(3,1fr);}}
 
 .rptgrid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.5rem;}
 .rptcard{background:var(--s1);border:1px solid var(--s3);border-radius:16px;padding:1.2rem;}
@@ -212,7 +194,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .mhead{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;border-bottom:1px solid var(--s3);}
 .mtitle{font-weight:700;font-size:.95rem;}
 .mclose{background:none;border:none;color:var(--g2);font-size:1rem;padding:2px 6px;border-radius:6px;}.mclose:hover{background:var(--s2);color:var(--w);}
-.mbody{padding:1.2rem;}
+.mbody{padding:1.2rem;overflow-y:auto;}
 .mfoot{display:flex;gap:7px;justify-content:flex-end;padding:.9rem 1.2rem;border-top:1px solid var(--s3);}
 
 .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:.9rem;}
@@ -231,7 +213,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .emptyico{font-size:2rem;margin-bottom:.7rem;opacity:.4;}
 .emptytxt{font-size:.86rem;}
 
-.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(70px);background:var(--s1);border:1px solid var(--gr3);color:var(--gr);padding:10px 18px;border-radius:12px;font-size:.84rem;font-weight:500;z-index:600;transition:transform .25s;pointer-events:none;}
+.toast{position:fixed;bottom:calc(76px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(70px);background:var(--s1);border:1px solid var(--gr3);color:var(--gr);padding:10px 18px;border-radius:12px;font-size:.84rem;font-weight:500;z-index:600;transition:transform .25s;pointer-events:none;max-width:92vw;text-align:center;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 .toast.err{border-color:rgba(239,68,68,.4);color:#f87171;}
 
@@ -241,6 +223,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
   .ph{flex-direction:column;align-items:stretch;gap:.7rem;}
   .phact{width:100%;flex-wrap:wrap;justify-content:flex-start;}
   .phact .btn{flex:1 1 auto;justify-content:center;min-width:0;}
+  .srch{width:100%;}
+  .tboxh{flex-direction:column;align-items:stretch;gap:.5rem;}
+  .btab span{font-size:.58rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 }
 .print-header{display:none;}
 @media print{
@@ -454,7 +439,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="tbox">
         <div class="tboxh"><div class="tboxt">آخر المهام الموثقة</div><input class="srch" placeholder="🔍 بحث..." oninput="filterTbl(this.value,'dtbody')"></div>
         <table><thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات / ملاحظات</th><th></th></tr></thead><tbody id="dtbody"></tbody></table>
-        <div class="empty" id="dempty"><div class="emptyico">📋</div><div class="emptytxt">لا توجد مهام موثقة بعد</div></div>
+        <div class="empty" id="dempty"><div class="emptyico">📋</div><div class="emptytxt">لا توجد مهام موثقة بعد</div><div style="color:var(--g1);font-size:.76rem;margin-top:6px;">اضغط الزر ＋ في الأسفل لإضافة أول مهمة</div></div>
       </div>
     </div>
 
@@ -465,7 +450,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="tbox">
         <div class="tboxh"><div class="tboxt">سجل المهام</div><input class="srch" placeholder="🔍 بحث..." oninput="filterTbl(this.value,'btbody')"></div>
         <table><thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات / ملاحظات</th><th></th></tr></thead><tbody id="btbody"></tbody></table>
-        <div class="empty" id="bempty"><div class="emptyico">📋</div><div class="emptytxt">لا توجد مهام</div></div>
+        <div class="empty" id="bempty"><div class="emptyico">📋</div><div class="emptytxt">لا توجد مهام</div><div style="color:var(--g1);font-size:.76rem;margin-top:6px;">اضغط "＋ توثيق مهمة" أعلى الصفحة</div></div>
       </div>
     </div>
 
@@ -488,9 +473,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="ph">
         <div><div class="phtitle">التقارير</div><div class="phsub">قائمة المهام — فلترة حسب المنتج/الشهر/المنفذ/المهمة/المعدة</div></div>
         <div class="phact" style="gap:8px;">
-          <button class="btn btn-p admin-only" onclick="navTo('analytics')">📊 لوحة القيادة</button>
-          <button class="btn btn-g" onclick="printReport()">🖨️ PDF</button>
-          <button class="btn btn-g" onclick="exportExcel()">📋 Excel</button>
+          <button class="btn btn-p admin-only" aria-label="فتح لوحة القيادة" onclick="navTo('analytics')">📊 لوحة القيادة</button>
+          <button class="btn btn-g" aria-label="طباعة PDF" onclick="printReport()">🖨️ PDF</button>
+          <button class="btn btn-g" aria-label="تصدير Excel" onclick="exportExcel()">📋 Excel</button>
         </div>
       </div>
       <div class="seclbl">المنتج</div>
@@ -516,7 +501,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="tbox">
         <div class="tboxh">
           <div class="tboxt">سجل المهام <span id="lRCount" style="color:var(--g2);font-size:.78rem;margin-right:6px;"></span></div>
-          <input class="srch" id="lRSearch" placeholder="🔍 بحث..." oninput="renderReports()">
+          <input class="srch" id="lRSearch" placeholder="🔍 بحث..." oninput="_renderReportsTable()">
         </div>
         <table>
           <thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات / ملاحظات</th></tr></thead>
@@ -535,9 +520,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="ph">
         <div><div class="phtitle">لوحة القيادة</div><div class="phsub">ملخص تحليلي قابل للطباعة</div></div>
         <div class="phact" style="gap:8px;">
-          <button class="btn btn-g" onclick="navTo('reports')">← رجوع</button>
-          <button class="btn btn-p admin-only" onclick="printAnalytics()">🖨️ PDF / طباعة</button>
-          <button class="btn btn-g admin-only" onclick="exportExcel()">📋 Excel</button>
+          <button class="btn btn-g" aria-label="رجوع لصفحة التقارير" onclick="navTo('reports')">← رجوع</button>
+          <button class="btn btn-p admin-only" aria-label="طباعة PDF" onclick="printAnalytics()">🖨️ PDF / طباعة</button>
+          <button class="btn btn-g admin-only" aria-label="تصدير Excel" onclick="exportExcel()">📋 Excel</button>
         </div>
       </div>
       <div class="seclbl">تصفية بالشهر</div>
@@ -626,9 +611,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <svg class="bticon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
     <span>المهام</span>
   </div>
-  <div class="btab" onclick="openModal('task')" style="margin-top:-15px;">
+  <div class="btab" role="button" aria-label="توثيق مهمة جديدة" onclick="openModal('task')" style="margin-top:-15px;">
     <span style="background:var(--gr);color:#000;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(74,222,128,.3);">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </span>
   </div>
   <div class="btab" data-p="equipment" onclick="navTo('equipment')">
@@ -644,7 +629,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- MODALS -->
 <div class="overlay" id="ov-task">
   <div class="modal">
-    <div class="mhead"><div class="mtitle">📋 توثيق مهمة</div><button class="mclose" onclick="closeModal('task')">✕</button></div>
+    <div class="mhead"><div class="mtitle">📋 توثيق مهمة</div><button class="mclose" aria-label="إغلاق" onclick="closeModal('task')">✕</button></div>
     <div class="mbody">
       <div class="fgrid">
         <div class="fg f2"><label class="fl">المنتج *</label>
@@ -685,7 +670,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 <div class="overlay" id="ov-addprog">
   <div class="modal sm">
-    <div class="mhead"><div class="mtitle">📺 إضافة منتج</div><button class="mclose" onclick="closeModal('addprog')">✕</button></div>
+    <div class="mhead"><div class="mtitle">📺 إضافة منتج</div><button class="mclose" aria-label="إغلاق" onclick="closeModal('addprog')">✕</button></div>
     <div class="mbody">
       <div class="fg"><label class="fl">اسم المنتج *</label><input class="fi" id="np-name" placeholder="مثل: استديو الجماهير"></div>
       <div class="fg"><label class="fl">أنواع المهام (افصل بفاصلة)</label><input class="fi" id="np-types" placeholder="بث مباشر، تحرير مباشر">
@@ -697,7 +682,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 <div class="overlay" id="ov-equip">
   <div class="modal">
-    <div class="mhead"><div class="mtitle">🎛️ إضافة معدة</div><button class="mclose" onclick="closeModal('equip')">✕</button></div>
+    <div class="mhead"><div class="mtitle">🎛️ إضافة معدة</div><button class="mclose" aria-label="إغلاق" onclick="closeModal('equip')">✕</button></div>
     <div class="mbody">
       <div class="fgrid">
         <div class="fg f2"><label class="fl">اسم المعدة *</label><input class="fi" id="e-name" placeholder="مثل: كاميرا Sony ZV-E10"></div>
@@ -718,7 +703,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 <div class="overlay" id="ov-teamMember">
   <div class="modal sm">
-    <div class="mhead"><div class="mtitle">👤 إضافة عضو</div><button class="mclose" onclick="closeModal('teamMember')">✕</button></div>
+    <div class="mhead"><div class="mtitle">👤 إضافة عضو</div><button class="mclose" aria-label="إغلاق" onclick="closeModal('teamMember')">✕</button></div>
     <div class="mbody">
       <div class="fg"><label class="fl">الاسم *</label><input class="fi" id="t-name" placeholder="الاسم الكامل"></div>
       <div class="fg"><label class="fl">ملاحظات</label><textarea class="ft" id="t-notes" placeholder="مهارات، تخصص..."></textarea></div>
@@ -738,7 +723,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 <div class="overlay" id="ov-secq">
   <div class="modal sm">
-    <div class="mhead"><div class="mtitle">🔒 سؤال الأمان</div><button class="mclose" onclick="closeModal('secq')">✕</button></div>
+    <div class="mhead"><div class="mtitle">🔒 سؤال الأمان</div><button class="mclose" aria-label="إغلاق" onclick="closeModal('secq')">✕</button></div>
     <div class="mbody">
       <div class="fg"><label class="fl">المستخدم</label><div id="sq-name" style="padding:8px 0;font-weight:600;color:var(--gr);"></div></div>
       <div class="fg"><label class="fl">اختر السؤال</label>
@@ -1114,8 +1099,14 @@ async function approveRequest(name) {
   var reqs = lsGet('t8_joinRequests') || [];
   var r = reqs.find(function(x){return x.name===name;});
   if(!r){toast('الطلب غير موجود','err');return;}
-  var user = {name:r.name, pin:r.pin, role:'member', secQ:r.secQ||'', secA:r.secA||''};
   try {
+    // تأكيد عدم وجود مستخدم بنفس الاسم (يمنع الكتابة فوق مستخدم حالي)
+    var existing = await db.collection('users').doc(name).get();
+    if(existing.exists){
+      toast('يوجد مستخدم بنفس الاسم — ارفض الطلب أو اطلب اسماً مختلفاً','err');
+      return;
+    }
+    var user = {name:r.name, pin:r.pin, role:'member', secQ:r.secQ||'', secA:r.secA||''};
     await db.collection('users').doc(name).set(user);
     await db.collection('joinRequests').doc(name).delete();
     toast('تم قبول '+name+' ✓');
@@ -1167,7 +1158,8 @@ function changeMyPin() {
     if(!u || u.pin !== oldPin){ toast('PIN الحالي غير صحيح','err'); return; }
     showInputModal('أدخل PIN الجديد (4 أرقام)', '••••', function(newPin) {
       if(!/^\d{4}$/.test(newPin)){toast('PIN يجب أن يكون 4 أرقام','err');return;}
-      u.pin = newPin; lsSet('t8_users', users); db.collection('users').doc(u.name).set(u);
+      u.pin = newPin; lsSet('t8_users', users);
+      db.collection('users').doc(u.name).set(u).catch(dbErr('changeMyPin'));
       toast('تم تغيير PIN ✓');
     });
   });
@@ -1235,18 +1227,36 @@ function startForgotPin() {
   showStep('forgot');
 }
 
+// قفل استعادة PIN — عداد محاولات محلي + قفل 30 ثانية بعد 3 محاولات فاشلة
+var _forgotAttempts = 0;
+var _forgotLockUntil = 0;
+
 function verifySecurityAnswer() {
+  var nowTs = Date.now();
+  if(_forgotLockUntil > nowTs){
+    var sec = Math.ceil((_forgotLockUntil - nowTs)/1000);
+    document.getElementById('forgotErr').textContent = 'محاولات كثيرة — حاول بعد '+sec+' ثانية';
+    return;
+  }
   var answer = document.getElementById('forgotA').value.trim();
   if(!answer){toast('أدخل الإجابة','err');return;}
   if(!_forgotUser){return;}
   if(answer === _forgotUser.secA) {
+    _forgotAttempts = 0;
     document.getElementById('newpinName').textContent = 'تعيين PIN جديد لـ ' + _forgotUser.name;
     document.getElementById('newpin1').value = '';
     document.getElementById('newpin2').value = '';
     document.getElementById('newpinErr').textContent = '';
     showStep('newpin');
   } else {
-    document.getElementById('forgotErr').textContent = 'الإجابة غير صحيحة';
+    _forgotAttempts++;
+    if(_forgotAttempts >= 3){
+      _forgotLockUntil = nowTs + 30000;
+      _forgotAttempts = 0;
+      document.getElementById('forgotErr').textContent = 'محاولات كثيرة — مقفل 30 ثانية';
+    } else {
+      document.getElementById('forgotErr').textContent = 'الإجابة غير صحيحة ('+_forgotAttempts+'/3)';
+    }
   }
 }
 
@@ -1258,7 +1268,7 @@ function saveNewPin() {
   if(!_forgotUser) return;
   var users = lsGet('t8_users') || [];
   var u = users.find(function(u){return u.name===_forgotUser.name;});
-  if(u){ u.pin = p1; lsSet('t8_users', users); db.collection('users').doc(u.name).set(u); }
+  if(u){ u.pin = p1; lsSet('t8_users', users); db.collection('users').doc(u.name).set(u).catch(dbErr('saveNewPin')); }
   toast('تم تعيين PIN جديد ✓ سجّل دخولك الآن');
   _forgotUser = null;
   showStep('list');
@@ -1270,7 +1280,7 @@ function resetUserPin(name) {
     if(!/^\d{4}$/.test(newPin)){toast('PIN يجب أن يكون 4 أرقام','err');return;}
     var users = lsGet('t8_users') || [];
     var u = users.find(function(u){return u.name===name;});
-    if(u){ u.pin = newPin; lsSet('t8_users', users); db.collection('users').doc(u.name).set(u); }
+    if(u){ u.pin = newPin; lsSet('t8_users', users); db.collection('users').doc(u.name).set(u).catch(dbErr('resetUserPin')); }
     toast('تم تعيين PIN لـ '+name+' ✓');
   });
 }
@@ -1383,7 +1393,7 @@ function addEquipCustom() {
     if(!exists){
       var rec={id:Date.now(),name:name,cat:'📦 أخرى',status:'✅ يعمل ممتاز',serial:'',date:'',notes:''};
       S.equipment.unshift(rec); saveState();
-      db.collection('equipment').doc(String(rec.id)).set(rec);
+      db.collection('equipment').doc(String(rec.id)).set(rec).catch(dbErr('addEquipCustom'));
       renderEquipPicker();
     }
     if(_selEquip.indexOf(name)===-1){ _selEquip.push(name); renderEquipTags(); }
@@ -1435,7 +1445,7 @@ function addExecCustom() {
     if(!exists){
       var tmember={id:Date.now(),name:name,notes:''};
       S.team.unshift(tmember); saveState();
-      db.collection('team').doc(String(tmember.id)).set(tmember);
+      db.collection('team').doc(String(tmember.id)).set(tmember).catch(dbErr('addExecCustom'));
       renderExecPicker();
     }
   });
@@ -1498,7 +1508,7 @@ function addTypeInline() {
     var prog=S.programs.find(function(p){return p.id===pid;});
     if(prog.types.indexOf(name)!==-1){toast('المهمة موجودة مسبقاً','err');return;}
     prog.types.push(name); saveState(); onProgChange();
-    db.collection('programs').doc(pid).set(prog);
+    db.collection('programs').doc(pid).set(prog).catch(dbErr('addTypeInline'));
     document.getElementById('b-type').value=name; toast('✓');
   });
 }
@@ -1878,7 +1888,13 @@ function renderReports() {
   qSel.innerHTML=qHtml;
   qSel.value=_lequip;
 
-  // --- تطبيق الفلاتر + البحث ---
+  // --- الجدول (منفصل حتى يستدعيه البحث بدون إعادة بناء الفلاتر) ---
+  _renderReportsTable();
+}
+
+// يُرسم الجدول فقط (بحث + فلاتر مطبّقة على broadcasts)، بدون مسّ tabs/dropdowns
+function _renderReportsTable(){
+  var all=S.broadcasts;
   var filtered=_applyListFilters(all);
   var srchEl=document.getElementById('lRSearch');
   var q=((srchEl&&srchEl.value)||'').toLowerCase().trim();
@@ -1888,12 +1904,12 @@ function renderReports() {
       return row.indexOf(q)!==-1;
     });
   }
-
-  // --- الجدول ---
-  document.getElementById('lRCount').textContent='('+filtered.length+' من '+all.length+')';
+  var cnt=document.getElementById('lRCount');
+  if(cnt) cnt.textContent='('+filtered.length+' من '+all.length+')';
   var tb=document.getElementById('lRBody'), em=document.getElementById('lREmpty');
-  if(!filtered.length){ tb.innerHTML=''; em.style.display='block'; return; }
-  em.style.display='none';
+  if(!tb) return;
+  if(!filtered.length){ tb.innerHTML=''; if(em) em.style.display='block'; return; }
+  if(em) em.style.display='none';
   tb.innerHTML=filtered.map(function(b){
     var eqs=eqStr(b);
     return '<tr><td><strong>'+esc(b.name)+'</strong></td><td>'+esc(b.type)+'</td><td>'+esc(b.date||'—')+'</td>' +
@@ -2027,11 +2043,11 @@ function renderSettings() {
       '<div class="omgra"><input id="oa-'+esc(k)+'" placeholder="خيار جديد..." onkeydown="if(event.key===\'Enter\')addOpt(\''+eq(k)+'\')"><button class="btn btn-p btn-s" onclick="addOpt(\''+eq(k)+'\')">إضافة</button></div></div>';
   }).join('');
 }
-function addType(pi){var i=document.getElementById('pt-'+pi),v=i.value.trim();if(!v)return;if(S.programs[pi].types.indexOf(v)!==-1){toast('موجودة','err');return;}S.programs[pi].types.push(v);saveState();i.value='';renderSettings();toast('✓');db.collection('programs').doc(S.programs[pi].id).set(S.programs[pi]);}
-function delType(pi,ti){S.programs[pi].types.splice(ti,1);saveState();renderSettings();db.collection('programs').doc(S.programs[pi].id).set(S.programs[pi]);}
-function delProg(pid){var idx=S.programs.findIndex(function(p){return p.id===pid;});if(idx===-1){toast('غير موجود','err');return;}showConfirm('حذف منتج "'+S.programs[idx].name+'"؟',function(){S.programs.splice(idx,1);saveState();renderSettings();toast('تم الحذف');db.collection('programs').doc(pid).delete();});}
-function addOpt(k){var i=document.getElementById('oa-'+k),v=i.value.trim();if(!v)return;if(S.opts[k].indexOf(v)!==-1){toast('موجود','err');return;}S.opts[k].push(v);saveState();i.value='';renderSettings();toast('✓');db.collection('settings').doc('opts').set(S.opts);}
-function rmOpt(k,idx){S.opts[k].splice(idx,1);saveState();renderSettings();db.collection('settings').doc('opts').set(S.opts);}
+function addType(pi){var i=document.getElementById('pt-'+pi),v=i.value.trim();if(!v)return;if(S.programs[pi].types.indexOf(v)!==-1){toast('موجودة','err');return;}S.programs[pi].types.push(v);saveState();i.value='';renderSettings();toast('✓');db.collection('programs').doc(S.programs[pi].id).set(S.programs[pi]).catch(dbErr('addType'));}
+function delType(pi,ti){S.programs[pi].types.splice(ti,1);saveState();renderSettings();db.collection('programs').doc(S.programs[pi].id).set(S.programs[pi]).catch(dbErr('delType'));}
+function delProg(pid){var idx=S.programs.findIndex(function(p){return p.id===pid;});if(idx===-1){toast('غير موجود','err');return;}showConfirm('حذف منتج "'+S.programs[idx].name+'"؟',function(){S.programs.splice(idx,1);saveState();renderSettings();toast('تم الحذف');db.collection('programs').doc(pid).delete().catch(dbErr('delProg'));});}
+function addOpt(k){var i=document.getElementById('oa-'+k),v=i.value.trim();if(!v)return;if(S.opts[k].indexOf(v)!==-1){toast('موجود','err');return;}S.opts[k].push(v);saveState();i.value='';renderSettings();toast('✓');db.collection('settings').doc('opts').set(S.opts).catch(dbErr('addOpt'));}
+function rmOpt(k,idx){S.opts[k].splice(idx,1);saveState();renderSettings();db.collection('settings').doc('opts').set(S.opts).catch(dbErr('rmOpt'));}
 
 // ── NAV ─────────────────────────────────────
 function showPage(id,el) {
@@ -2180,10 +2196,13 @@ function exportExcel() {
   });
   xml += '</Workbook>';
   var blob = new Blob([xml], {type:'application/vnd.ms-excel'});
+  var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  a.href = url;
   a.download = 'tamaniya-report' + monthSuffix + '-' + new Date().toISOString().slice(0,10) + '.xls';
   a.click();
+  // إعادة تحرير الـblob URL بعد فترة قصيرة (بعد ما يبدأ التنزيل)
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
   toast('تم تصدير Excel ✓');
 }
 
@@ -2199,7 +2218,7 @@ initLogin();
 <!-- Input Modal (replaces iOS-incompatible prompt()) -->
 <div class="overlay" id="ov-input">
   <div class="modal sm">
-    <div class="mhead"><div class="mtitle" id="inputModalTitle">إدخال</div><button class="mclose" onclick="closeModal('input')">✕</button></div>
+    <div class="mhead"><div class="mtitle" id="inputModalTitle">إدخال</div><button class="mclose" aria-label="إغلاق" onclick="closeModal('input')">✕</button></div>
     <div class="mbody">
       <input class="fi" id="inputModalField" placeholder="" autocomplete="off">
     </div>

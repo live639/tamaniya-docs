@@ -1,6 +1,6 @@
 // sw.js  –  Thamaniya PWA Service Worker
 // IMPORTANT: bump CACHE_NAME after every deployment to force cache refresh
-const CACHE_NAME = 't8-v12';
+const CACHE_NAME = 't8-v13';
 
 const PRECACHE_URLS = [
   './',
