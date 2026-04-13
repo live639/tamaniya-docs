@@ -485,7 +485,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <input class="srch" id="lRSearch" placeholder="🔍 بحث..." oninput="_renderReportsTable()">
         </div>
         <table>
-          <thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات / ملاحظات</th></tr></thead>
+          <thead><tr><th style="width:36px;">#</th><th>المنتج</th><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th><th>المعدات / ملاحظات</th></tr></thead>
           <tbody id="lRBody"></tbody>
         </table>
         <div class="empty" id="lREmpty" style="display:none;"><div class="emptyico">📭</div><div class="emptytxt">لا توجد نتائج مطابقة</div></div>
@@ -1886,6 +1886,17 @@ function renderReports() {
   _renderReportsTable();
 }
 
+// ترتيب broadcasts تنازلياً حسب التاريخ (الأحدث أولاً)، بلا-تاريخ في الآخر
+function _sortByDateDesc(arr){
+  return arr.slice().sort(function(a,b){
+    var da=a.date||'', db=b.date||'';
+    if(da && db) return db.localeCompare(da);
+    if(da) return -1;
+    if(db) return 1;
+    return 0;
+  });
+}
+
 // يُرسم الجدول فقط (بحث + فلاتر مطبّقة على broadcasts)، بدون مسّ tabs/dropdowns
 function _renderReportsTable(){
   var all=S.broadcasts;
@@ -1898,15 +1909,18 @@ function _renderReportsTable(){
       return row.indexOf(q)!==-1;
     });
   }
+  // ترتيب حسب تاريخ المهمة تنازلياً
+  filtered = _sortByDateDesc(filtered);
+
   var cnt=document.getElementById('lRCount');
   if(cnt) cnt.textContent='('+filtered.length+' من '+all.length+')';
   var tb=document.getElementById('lRBody'), em=document.getElementById('lREmpty');
   if(!tb) return;
   if(!filtered.length){ tb.innerHTML=''; if(em) em.style.display='block'; return; }
   if(em) em.style.display='none';
-  tb.innerHTML=filtered.map(function(b){
+  tb.innerHTML=filtered.map(function(b, idx){
     var eqs=eqStr(b);
-    return '<tr><td><strong>'+esc(b.name)+'</strong></td><td>'+esc(b.type)+'</td><td>'+esc(b.date||'—')+'</td>' +
+    return '<tr><td style="color:var(--g2);font-weight:700;text-align:center;">'+(idx+1)+'</td><td><strong>'+esc(b.name)+'</strong></td><td>'+esc(b.type)+'</td><td>'+esc(b.date||'—')+'</td>' +
       '<td style="color:var(--gr);font-size:.82rem;">'+esc(exStr(b))+'</td>' +
       '<td style="font-size:.78rem;max-width:180px;">'+
         (eqs!=='—'?'<div style="color:var(--g2);">'+esc(eqs)+'</div>':'')+
@@ -2171,9 +2185,11 @@ function exportExcel() {
     filteredBs = _filteredBroadcasts();
     monthSuffix = _rmonth==='all' ? '' : '-'+_rmonth;
   }
+  // ترتيب المهام للتصدير حسب التاريخ تنازلياً (الأحدث أولاً)
+  var sortedBs = _sortByDateDesc(filteredBs);
   var sheets = [
-    {name:'المهام', h:['المنتج','المهمة','التاريخ','منفذو المهمة','المعدات','ملاحظات'],
-     r:filteredBs.map(function(b){return[b.name,b.type,b.date,exStr(b),eqStr(b),b.notes||''];})},
+    {name:'المهام', h:['#','المنتج','المهمة','التاريخ','منفذو المهمة','المعدات','ملاحظات'],
+     r:sortedBs.map(function(b,i){return[i+1,b.name,b.type,b.date,exStr(b),eqStr(b),b.notes||''];})},
     {name:'المعدات', h:['الاسم','الفئة','الحالة','الرقم التسلسلي','تاريخ الشراء','ملاحظات'],
      r:S.equipment.map(function(e){return[e.name,e.cat,e.status,e.serial||'',e.date||'',e.notes||''];})},
     {name:'الفريق', h:['الاسم','ملاحظات'],
