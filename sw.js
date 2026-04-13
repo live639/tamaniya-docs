@@ -1,6 +1,6 @@
 // sw.js  –  Thamaniya PWA Service Worker
 // IMPORTANT: bump CACHE_NAME after every deployment to force cache refresh
-const CACHE_NAME = 't8-v8';
+const CACHE_NAME = 't8-v9';
 
 const PRECACHE_URLS = [
   './',
@@ -46,10 +46,15 @@ self.addEventListener('activate', function(event) {
 // ── FETCH ─────────────────────────────────────────────────────────────────────
 // Strategy: network-first to ensure updates load immediately (critical for iOS)
 self.addEventListener('fetch', function(event) {
+  // تجاهل الطلبات عبر النطاقات (Firebase APIs, gstatic CDN) — نخليها لكاش المتصفح
+  var reqUrl;
+  try { reqUrl = new URL(event.request.url); } catch(e) { return; }
+  if (reqUrl.origin !== self.location.origin) return;
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
     fetch(event.request).then(function(networkResponse) {
-      if (networkResponse && networkResponse.status === 200 &&
-          (networkResponse.type === 'basic' || networkResponse.type === 'cors')) {
+      if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
         var responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then(function(cache) {
           cache.put(event.request, responseToCache);
