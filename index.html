@@ -100,6 +100,9 @@ main{padding:1rem 1rem 70px;overflow-y:auto;}
 .stv{font-size:2.1rem;font-weight:700;color:var(--w);letter-spacing:-.03em;}
 .stn{color:var(--g1);font-size:.72rem;margin-top:3px;}
 
+/* KPI row for analytics — reuses .stat but isn't hidden in print */
+.kpirow{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1.5rem;}
+
 .tbox{background:var(--s1);border:1px solid var(--s3);border-radius:16px;overflow-x:auto;overflow-y:hidden;margin-bottom:1.5rem;-webkit-overflow-scrolling:touch;}.tbox table{min-width:650px;}
 .tboxh{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.2rem;border-bottom:1px solid var(--s3);gap:.7rem;flex-wrap:wrap;}
 .tboxt{font-weight:600;font-size:.92rem;}
@@ -175,14 +178,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .tab.active{background:var(--gr2);color:var(--gr);border-color:var(--gr3);font-weight:600;}
 
 
-.rptgrid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.5rem;}
-.rptcard{background:var(--s1);border:1px solid var(--s3);border-radius:16px;padding:1.2rem;}
-.rptlbl{font-weight:600;color:var(--g2);font-size:.76rem;letter-spacing:.05em;margin-bottom:1rem;}
-.barrow{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
-.barlbl{width:90px;color:var(--g2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.77rem;}
-.bartrack{flex:1;background:var(--s3);border-radius:4px;height:6px;overflow:hidden;}
-.barfill{height:100%;border-radius:4px;transition:width .5s ease;}
-.barnum{width:22px;font-size:.72rem;color:var(--g2);}
 
 .seclbl{font-size:.72rem;color:var(--g2);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;}
 
@@ -218,7 +213,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .toast.err{border-color:rgba(239,68,68,.4);color:#f87171;}
 
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px;}
-@media(max-width:700px){.stats,.cgrid,.ugrid{grid-template-columns:repeat(2,1fr);}.rptgrid{grid-template-columns:1fr;}}
+@media(max-width:700px){.stats,.cgrid,.ugrid,.kpirow{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:600px){
   .ph{flex-direction:column;align-items:stretch;gap:.7rem;}
   .phact{width:100%;flex-wrap:wrap;justify-content:flex-start;}
@@ -235,36 +230,22 @@ tr:hover td{background:rgba(255,255,255,.02);}
   .page{display:none!important;}
   .page.active{display:block!important;}
   .print-header{display:block;text-align:center;margin-bottom:1.5rem;border-bottom:2px solid #000;padding-bottom:.8rem;}
-  .print-header h2{font-size:1.3rem;margin:0 0 4px;}
-  .print-header span{font-size:.85rem;color:#555;}
-  .rptgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;}
-  .rptcard{border:1px solid #ddd;border-radius:8px;padding:.8rem;break-inside:avoid;}
-  .tbox{break-inside:avoid;border:1px solid #ddd;border-radius:8px;padding:.8rem;margin-top:.8rem;overflow:visible!important;}
+  .print-header h2{font-size:1.3rem;margin:0 0 4px;color:#000!important;}
+  .print-header span,.print-header div{color:#555!important;}
+  .tbox{break-inside:avoid;border:1px solid #ccc;border-radius:6px;padding:.4rem;margin-top:.4rem;overflow:visible!important;background:#fff!important;}
+  .tboxh{display:none!important;}
   table{width:100%;border-collapse:collapse;}
-  th,td{border:1px solid #ccc;padding:5px 8px;font-size:.78rem;text-align:right;}
-  th{background:#f5f5f5;font-weight:600;}
-  .seclbl{font-weight:700;margin:1rem 0 .4rem;font-size:.9rem;}
-  /* طباعة قسم معيّن */
-  [data-print-section="user"] .rptgrid,
-  [data-print-section="user"] #rptProgBox,
-  [data-print-section="user"] #rptProgTabs,
-  [data-print-section="user"] #summBody,
-  [data-print-section="user"] .tbox:last-child{display:none!important;}
-  [data-print-section="prog"] .rptgrid,
-  [data-print-section="prog"] #rptUserBox,
-  [data-print-section="prog"] #rptUserTabs,
-  [data-print-section="prog"] #rptEquipBox,
-  [data-print-section="prog"] #summBody,
-  [data-print-section="prog"] .tbox:last-child{display:none!important;}
-  [data-print-section="equip"] .rptgrid,
-  [data-print-section="equip"] #rptUserBox,
-  [data-print-section="equip"] #rptUserTabs,
-  [data-print-section="equip"] #rptProgBox,
-  [data-print-section="equip"] #rptProgTabs,
-  [data-print-section="equip"] #summBody,
-  [data-print-section="equip"] .tbox:last-child{display:none!important;}
-  [data-print-section="user"] #rptEquipBox,
-  [data-print-section="prog"] #rptEquipBox{display:none!important;}
+  th,td{border:1px solid #bbb;padding:5px 8px;font-size:.78rem;text-align:right;color:#000!important;background:#fff!important;}
+  th{background:#eee!important;font-weight:700;}
+  .seclbl{font-weight:700;margin:.9rem 0 .3rem;font-size:.88rem;color:#000!important;text-transform:none;letter-spacing:0;break-after:avoid;}
+  /* KPI cards: make print-friendly */
+  .kpirow{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:.5rem;margin-bottom:1rem;break-inside:avoid;}
+  .kpirow .stat{background:#fff!important;border:1px solid #bbb!important;border-radius:6px;padding:.6rem .8rem;}
+  .kpirow .stl{color:#555!important;font-size:.7rem;}
+  .kpirow .stv{color:#000!important;font-size:1.5rem;}
+  .kpirow .stn{color:#888!important;font-size:.65rem;}
+  .empty{display:none!important;}
+  tr{break-inside:avoid;}
 }
 </style>
 <!-- Firebase -->
@@ -514,57 +495,70 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="page" id="page-analytics">
       <div class="print-header">
         <h2>نظام التوثيق الداخلي — ثمانية</h2>
-        <span id="printDate"></span>
-        <div id="printMonth" style="font-size:.78rem;color:#555;margin-top:3px;"></div>
+        <div style="font-size:.9rem;margin-top:2px;font-weight:600;">لوحة القيادة التحليلية</div>
+        <div style="display:flex;justify-content:space-between;gap:1rem;font-size:.78rem;color:#555;margin-top:6px;padding-top:6px;border-top:1px solid #ccc;">
+          <span id="printDate"></span>
+          <span id="printMonth"></span>
+        </div>
       </div>
       <div class="ph">
-        <div><div class="phtitle">لوحة القيادة</div><div class="phsub">ملخص تحليلي قابل للطباعة</div></div>
+        <div><div class="phtitle">لوحة القيادة</div></div>
         <div class="phact" style="gap:8px;">
           <button class="btn btn-g" aria-label="رجوع لصفحة التقارير" onclick="navTo('reports')">← رجوع</button>
-          <button class="btn btn-p admin-only" aria-label="طباعة PDF" onclick="printAnalytics()">🖨️ PDF / طباعة</button>
+          <button class="btn btn-p admin-only" aria-label="طباعة PDF" onclick="printAnalytics()">🖨️ PDF</button>
           <button class="btn btn-g admin-only" aria-label="تصدير Excel" onclick="exportExcel()">📋 Excel</button>
         </div>
       </div>
+
       <div class="seclbl">تصفية بالشهر</div>
       <div class="tabs" id="rptMonthTabs" style="margin-bottom:1.2rem;"></div>
-      <div class="rptgrid">
-        <div class="rptcard"><div class="rptlbl">حسب المنتج</div><div id="rptProg"></div></div>
-        <div class="rptcard"><div class="rptlbl">حسب الشهر</div><div id="rptMonth"></div></div>
-        <div class="rptcard"><div class="rptlbl">حسب المهمة</div><div id="rptTask"></div></div>
-        <div class="rptcard"><div class="rptlbl">نشاط الفريق</div><div id="rptTeam"></div></div>
+
+      <div class="kpirow" id="anKpis"></div>
+
+      <div class="seclbl">التوزيع حسب المنتج</div>
+      <div class="tbox" style="margin-bottom:1.2rem;">
+        <table>
+          <thead><tr><th>المنتج</th><th>عدد المهام</th><th>النسبة</th><th>آخر مهمة</th></tr></thead>
+          <tbody id="anProgBody"></tbody>
+        </table>
+        <div class="empty" id="anProgEmpty" style="display:none;"><div class="emptyico">📊</div><div class="emptytxt">لا توجد بيانات</div></div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;">
-        <div class="seclbl" style="margin:0;">استخدام المعدات</div>
-        <button class="btn btn-g btn-s" onclick="printSection('equip')" style="font-size:.75rem;">🖨️ PDF</button>
+
+      <div class="seclbl">التوزيع حسب نوع المهمة</div>
+      <div class="tbox" style="margin-bottom:1.2rem;">
+        <table>
+          <thead><tr><th>نوع المهمة</th><th>عدد المرات</th><th>النسبة</th></tr></thead>
+          <tbody id="anTypeBody"></tbody>
+        </table>
+        <div class="empty" id="anTypeEmpty" style="display:none;"><div class="emptyico">📊</div><div class="emptytxt">لا توجد بيانات</div></div>
       </div>
-      <div class="tbox" id="rptEquipBox">
-        <div class="tboxh"><div class="tboxt">عدد مرات استخدام كل معدة</div></div>
-        <table><thead><tr><th>المعدة</th><th>عدد المرات</th><th>آخر استخدام</th></tr></thead><tbody id="rptEquipBody"></tbody></table>
-        <div class="empty" id="rptEquipEmpty" style="display:none;"><div class="emptyico">🎛️</div><div class="emptytxt">لا توجد بيانات</div></div>
+
+      <div class="seclbl">نشاط الفريق</div>
+      <div class="tbox" style="margin-bottom:1.2rem;">
+        <table>
+          <thead><tr><th>المنفذ</th><th>عدد المهام</th><th>النسبة</th><th>آخر مهمة</th></tr></thead>
+          <tbody id="anTeamBody"></tbody>
+        </table>
+        <div class="empty" id="anTeamEmpty" style="display:none;"><div class="emptyico">👥</div><div class="emptytxt">لا توجد بيانات</div></div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;">
-        <div class="seclbl" style="margin:0;">تفاصيل كل منفذ</div>
-        <button class="btn btn-g btn-s" onclick="printSection('user')" style="font-size:.75rem;">🖨️ PDF</button>
+
+      <div class="seclbl">استخدام المعدات</div>
+      <div class="tbox" style="margin-bottom:1.2rem;">
+        <table>
+          <thead><tr><th>المعدة</th><th>عدد المرات</th><th>آخر استخدام</th></tr></thead>
+          <tbody id="anEquipBody"></tbody>
+        </table>
+        <div class="empty" id="anEquipEmpty" style="display:none;"><div class="emptyico">🎛️</div><div class="emptytxt">لا توجد بيانات</div></div>
       </div>
-      <div class="tabs" id="rptUserTabs" style="margin-bottom:1rem;"></div>
-      <div class="tbox" id="rptUserBox">
-        <div class="tboxh"><div class="tboxt" id="rptUserTitle">كل المهام</div><span id="rptUserCount" style="color:var(--g2);font-size:.8rem;"></span></div>
-        <table><thead><tr><th>المنتج</th><th>المهمة</th><th>التاريخ</th></tr></thead><tbody id="rptUserBody"></tbody></table>
-        <div class="empty" id="rptUserEmpty" style="display:none;"><div class="emptyico">📭</div><div class="emptytxt">لا توجد مهام</div></div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;">
-        <div class="seclbl" style="margin:0;">تفاصيل كل منتج</div>
-        <button class="btn btn-g btn-s" onclick="printSection('prog')" style="font-size:.75rem;">🖨️ PDF</button>
-      </div>
-      <div class="tabs" id="rptProgTabs" style="margin-bottom:1rem;"></div>
-      <div class="tbox" id="rptProgBox">
-        <div class="tboxh"><div class="tboxt" id="rptProgTitle">كل المنتجات</div><span id="rptProgCount" style="color:var(--g2);font-size:.8rem;"></span></div>
-        <table><thead><tr><th>المهمة</th><th>التاريخ</th><th>منفذو المهمة</th></tr></thead><tbody id="rptProgBody"></tbody></table>
-        <div class="empty" id="rptProgEmpty" style="display:none;"><div class="emptyico">📭</div><div class="emptytxt">لا توجد مهام</div></div>
-      </div>
-      <div class="tbox" style="margin-top:1rem;">
-        <div class="tboxh"><div class="tboxt">ملخص</div></div>
-        <table><thead><tr><th>المقياس</th><th>القيمة</th></tr></thead><tbody id="summBody"></tbody></table>
+
+      <div id="anMonthlySection">
+        <div class="seclbl">التوزيع الشهري</div>
+        <div class="tbox" style="margin-bottom:1.2rem;">
+          <table>
+            <thead><tr><th>الشهر</th><th>عدد المهام</th><th>النسبة</th></tr></thead>
+            <tbody id="anMonthBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -1723,7 +1717,7 @@ function renderTeam() {
 }
 
 // ── حالة لوحة القيادة (analytics) ─────────────
-var _ru='all', _rp='all', _rmonth='all';
+var _rmonth='all';
 
 // ── حالة صفحة التقارير (قائمة بفلاتر) ─────────
 // _lmoNum هو رقم الشهر فقط ('01'..'12'), _lyear هو السنة ('YYYY'), كلاهما مستقل
@@ -1921,14 +1915,14 @@ function _renderReportsTable(){
   }).join('');
 }
 
-// ── لوحة القيادة — صفحة التحليل القابلة للطباعة ───
+// ── لوحة القيادة — صفحة تحليلية نظيفة قابلة للطباعة ───
 function renderAnalytics() {
-  var allB=S.broadcasts;
-  // بناء تبويبات الشهر من كل المهام
+  var allB = S.broadcasts;
+
+  // --- تبويبات الشهر (نفس المنطق السابق) ---
   var monthSet={};
   allB.forEach(function(r){ if(r.date) monthSet[r.date.slice(0,7)]=true; });
   var months=Object.keys(monthSet).sort().reverse();
-  // لو الشهر المختار اختفى من البيانات ارجع للكل
   if(_rmonth!=='all' && months.indexOf(_rmonth)===-1) _rmonth='all';
   var mt='<button class="tab'+(_rmonth==='all'?' active':'')+'" onclick="fRMonth(\'all\')">كل الأشهر ('+allB.length+')</button>';
   months.forEach(function(m){
@@ -1937,94 +1931,108 @@ function renderAnalytics() {
   });
   document.getElementById('rptMonthTabs').innerHTML=mt;
 
-  // تطبيق الفلتر — كل ما تحت يستخدم b المفلتر
+  // --- تطبيق الفلتر ---
   var b = _filteredBroadcasts();
-  var pal=['#4ade80','#60a5fa','#f472b6','#fb923c','#a78bfa','#fbbf24'];
-  function mkC(obj,el) {
-    var tot=Object.values(obj).reduce(function(a,v){return a+v;},0)||1;
-    var ent=Object.entries(obj).sort(function(a,c){return c[1]-a[1];});
-    document.getElementById(el).innerHTML=ent.length?ent.map(function(kv,i){
-      return '<div class="barrow"><div class="barlbl" title="'+esc(kv[0])+'">'+esc(kv[0])+'</div><div class="bartrack"><div class="barfill" style="width:'+((kv[1]/tot)*100)+'%;background:'+pal[i%pal.length]+';"></div></div><div class="barnum">'+kv[1]+'</div></div>';
-    }).join(''):'<div style="color:var(--g2);font-size:.8rem;">لا توجد بيانات</div>';
-  }
-  function grp(k){return b.reduce(function(a,r){a[r[k]]=(a[r[k]]||0)+1;return a;},{});}
-  mkC(grp('name'),'rptProg'); mkC(grp('type'),'rptTask');
-  // نشاط الفريق — مجموع حسب الاسم المطبّع
-  var ec={}, ecDisplay={};
+  var total = b.length;
+  var pct = function(n){ return total>0 ? Math.round((n/total)*100)+'%' : '—'; };
+
+  // --- KPI cards ---
+  var progSet={}, execSet={}, equipSet={};
+  b.forEach(function(r){
+    if(r.name) progSet[r.name]=true;
+    (Array.isArray(r.executors)?r.executors:[r.by]).forEach(function(e){ if(e) execSet[normName(e)]=true; });
+    if(Array.isArray(r.equipment)) r.equipment.forEach(function(e){ var n=e&&(e.name||e); if(n) equipSet[n]=true; });
+  });
+  var kpis=[
+    {lbl:'إجمالي المهام', val:total, note:_rmonth==='all'?'منذ البداية':formatMonthLabel(_rmonth)},
+    {lbl:'المنتجات النشطة', val:Object.keys(progSet).length, note:'منتج'},
+    {lbl:'الفريق النشط', val:Object.keys(execSet).length, note:'عضو'},
+    {lbl:'المعدات المستخدمة', val:Object.keys(equipSet).length, note:'قطعة'}
+  ];
+  document.getElementById('anKpis').innerHTML = kpis.map(function(k){
+    return '<div class="stat"><div class="stl">'+esc(k.lbl)+'</div><div class="stv">'+k.val+'</div><div class="stn">'+esc(k.note)+'</div></div>';
+  }).join('');
+
+  // --- التوزيع حسب المنتج ---
+  var progData={}, progLast={};
+  b.forEach(function(r){
+    if(!r.name) return;
+    progData[r.name]=(progData[r.name]||0)+1;
+    if(r.date && (!progLast[r.name] || r.date>progLast[r.name])) progLast[r.name]=r.date;
+  });
+  _fillTable('anProgBody','anProgEmpty',
+    Object.entries(progData).sort(function(a,c){return c[1]-a[1];}),
+    function(kv){
+      return '<tr><td><strong>'+esc(kv[0])+'</strong></td><td style="text-align:center;font-weight:700;color:var(--gr);">'+kv[1]+'</td><td>'+pct(kv[1])+'</td><td style="color:var(--g2);">'+esc(progLast[kv[0]]||'—')+'</td></tr>';
+    });
+
+  // --- التوزيع حسب نوع المهمة ---
+  var typeData={};
+  b.forEach(function(r){ if(r.type) typeData[r.type]=(typeData[r.type]||0)+1; });
+  _fillTable('anTypeBody','anTypeEmpty',
+    Object.entries(typeData).sort(function(a,c){return c[1]-a[1];}),
+    function(kv){
+      return '<tr><td>'+esc(kv[0])+'</td><td style="text-align:center;font-weight:700;color:var(--gr);">'+kv[1]+'</td><td>'+pct(kv[1])+'</td></tr>';
+    });
+
+  // --- نشاط الفريق (مدموج بالتطبيع) ---
+  var teamCount={}, teamLast={}, teamDisplay={};
   b.forEach(function(r){
     (Array.isArray(r.executors)?r.executors:[r.by]).forEach(function(e){
       if(!e) return;
       var n=normName(e);
-      ec[n]=(ec[n]||0)+1;
-      if(!ecDisplay[n]) ecDisplay[n]=e;
+      teamCount[n]=(teamCount[n]||0)+1;
+      if(!teamDisplay[n]) teamDisplay[n]=e;
+      if(r.date && (!teamLast[n] || r.date>teamLast[n])) teamLast[n]=r.date;
     });
   });
-  var ecOut={};
-  Object.keys(ec).forEach(function(k){ ecOut[ecDisplay[k]]=ec[k]; });
-  mkC(ecOut,'rptTeam');
-  var mo={};b.forEach(function(r){if(r.date){var m=r.date.slice(0,7);mo[m]=(mo[m]||0)+1;}});
-  mkC(Object.fromEntries(Object.entries(mo).sort(function(a,c){return c[0].localeCompare(a[0]);}).slice(0,8)),'rptMonth');
-  // user tabs — مدموجة حسب التطبيع
-  var auMap={};
-  b.forEach(function(r){
-    (Array.isArray(r.executors)?r.executors:[r.by]).forEach(function(e){
-      if(!e) return;
-      var n=normName(e);
-      if(!auMap[n]) auMap[n]=e;
-    });
+  var teamRows=Object.keys(teamCount).map(function(k){return [teamDisplay[k]||k, teamCount[k], teamLast[k]||''];}).sort(function(a,c){return c[1]-a[1];});
+  _fillTable('anTeamBody','anTeamEmpty', teamRows, function(row){
+    return '<tr><td><strong>'+esc(row[0])+'</strong></td><td style="text-align:center;font-weight:700;color:var(--gr);">'+row[1]+'</td><td>'+pct(row[1])+'</td><td style="color:var(--g2);">'+esc(row[2]||'—')+'</td></tr>';
   });
-  var rut='<button class="tab'+(_ru==='all'?' active':'')+'" onclick="fRU(\'all\')">الكل ('+b.length+')</button>';
-  Object.keys(auMap).forEach(function(nKey){
-    rut+='<button class="tab'+(_ru===nKey?' active':'')+'" onclick="fRU(\''+eq(nKey)+'\')">'+esc(auMap[nKey])+'</button>';
-  });
-  document.getElementById('rptUserTabs').innerHTML=rut; fRU(_ru,false);
-  // prog tabs
-  var ap=[];b.forEach(function(r){if(r.name&&ap.indexOf(r.name)===-1)ap.push(r.name);});
-  var rpt='<button class="tab'+(_rp==='all'?' active':'')+'" onclick="fRP(\'all\')">الكل ('+b.length+')</button>';
-  ap.forEach(function(p){rpt+='<button class="tab'+(_rp===p?' active':'')+'" onclick="fRP(\''+eq(p)+'\')">'+esc(p)+'</button>';});
-  document.getElementById('rptProgTabs').innerHTML=rpt; fRP(_rp,false);
-  // equipment usage
+
+  // --- استخدام المعدات ---
   var equipCount={}, equipLast={};
   b.forEach(function(r){
     if(!Array.isArray(r.equipment)) return;
     r.equipment.forEach(function(e){
-      var n=e.name||e;
+      var n=e&&(e.name||e);
+      if(!n) return;
       equipCount[n]=(equipCount[n]||0)+1;
-      if(!equipLast[n]||r.date>equipLast[n]) equipLast[n]=r.date||'';
+      if(r.date && (!equipLast[n] || r.date>equipLast[n])) equipLast[n]=r.date;
     });
   });
-  var equipEntries=Object.entries(equipCount).sort(function(a,c){return c[1]-a[1];});
-  var eqTb=document.getElementById('rptEquipBody'),eqEm=document.getElementById('rptEquipEmpty');
-  if(!equipEntries.length){eqTb.innerHTML='';eqEm.style.display='block';}
-  else{eqEm.style.display='none';eqTb.innerHTML=equipEntries.map(function(kv){
-    return '<tr><td><strong>'+esc(kv[0])+'</strong></td><td style="text-align:center;font-weight:700;color:var(--gr);">'+kv[1]+'</td><td style="color:var(--g2);">'+esc(equipLast[kv[0]]||'—')+'</td></tr>';
-  }).join('');}
+  _fillTable('anEquipBody','anEquipEmpty',
+    Object.entries(equipCount).sort(function(a,c){return c[1]-a[1];}),
+    function(kv){
+      return '<tr><td><strong>'+esc(kv[0])+'</strong></td><td style="text-align:center;font-weight:700;color:var(--gr);">'+kv[1]+'</td><td style="color:var(--g2);">'+esc(equipLast[kv[0]]||'—')+'</td></tr>';
+    });
 
-  // summary
-  document.getElementById('summBody').innerHTML=[['إجمالي المهام الموثقة',b.length],['هذا الشهر',b.filter(function(r){return r.date&&r.date.startsWith(new Date().toISOString().slice(0,7));}).length],['المعدات',S.equipment.length],['الفريق',S.team.length]].map(function(row){return'<tr><td style="color:var(--g2);">'+row[0]+'</td><td style="font-weight:700;color:var(--gr);">'+row[1]+'</td></tr>';}).join('');
+  // --- التوزيع الشهري (فقط إذا ما فيه فلتر شهر) ---
+  var monthlySection = document.getElementById('anMonthlySection');
+  if(_rmonth==='all'){
+    monthlySection.style.display='';
+    var monthData={};
+    b.forEach(function(r){ if(r.date){ var m=r.date.slice(0,7); monthData[m]=(monthData[m]||0)+1; } });
+    var monthEntries=Object.entries(monthData).sort(function(a,c){return c[0].localeCompare(a[0]);});
+    var monthBody=document.getElementById('anMonthBody');
+    monthBody.innerHTML = monthEntries.length
+      ? monthEntries.map(function(kv){
+          return '<tr><td>'+esc(formatMonthLabel(kv[0]))+'</td><td style="text-align:center;font-weight:700;color:var(--gr);">'+kv[1]+'</td><td>'+pct(kv[1])+'</td></tr>';
+        }).join('')
+      : '<tr><td colspan="3" style="text-align:center;color:var(--g2);padding:1rem;">لا توجد بيانات</td></tr>';
+  } else {
+    monthlySection.style.display='none';
+  }
 }
 
-function fRU(u,s) {
-  _ru=u;
-  if(!s)document.querySelectorAll('#rptUserTabs .tab').forEach(function(t){t.classList.toggle('active',(u==='all'&&t.textContent.startsWith('الكل'))||normName(t.textContent.trim())===u);});
-  var src=_filteredBroadcasts();
-  var list=u==='all'?src:src.filter(function(b){return(Array.isArray(b.executors)?b.executors:[b.by]).some(function(x){return normName(x)===u;});});
-  document.getElementById('rptUserTitle').textContent=u==='all'?'كل المهام':'مهام: '+u;
-  document.getElementById('rptUserCount').textContent=list.length+' مهمة';
-  var tb=document.getElementById('rptUserBody'),em=document.getElementById('rptUserEmpty');
-  if(!list.length){tb.innerHTML='';em.style.display='block';return;} em.style.display='none';
-  tb.innerHTML=list.map(function(b){return'<tr><td><strong>'+esc(b.name)+'</strong></td><td>'+esc(b.type)+'</td><td>'+esc(b.date||'—')+'</td></tr>';}).join('');
-}
-function fRP(p,s) {
-  _rp=p;
-  if(!s)document.querySelectorAll('#rptProgTabs .tab').forEach(function(t){t.classList.toggle('active',(p==='all'&&t.textContent.startsWith('الكل'))||t.textContent.trim()===p);});
-  var src=_filteredBroadcasts();
-  var list=p==='all'?src:src.filter(function(b){return b.name===p;});
-  document.getElementById('rptProgTitle').textContent=p==='all'?'كل المنتجات':'منتج: '+p;
-  document.getElementById('rptProgCount').textContent=list.length+' مهمة';
-  var tb=document.getElementById('rptProgBody'),em=document.getElementById('rptProgEmpty');
-  if(!list.length){tb.innerHTML='';em.style.display='block';return;} em.style.display='none';
-  tb.innerHTML=list.map(function(b){return'<tr><td>'+esc(b.type)+'</td><td>'+esc(b.date||'—')+'</td><td style="color:var(--gr);font-size:.82rem;">'+esc(exStr(b))+'</td></tr>';}).join('');
+// helper — يعبّئ tbody أو يعرض empty state
+function _fillTable(bodyId, emptyId, entries, rowFn){
+  var tb=document.getElementById(bodyId), em=document.getElementById(emptyId);
+  if(!tb) return;
+  if(!entries.length){ tb.innerHTML=''; if(em) em.style.display='block'; return; }
+  if(em) em.style.display='none';
+  tb.innerHTML = entries.map(rowFn).join('');
 }
 
 // ── SETTINGS ─────────────────────────────────
@@ -2130,7 +2138,6 @@ function _setReportsPrintHeader(){
 // طباعة قائمة التقارير (الصفحة الجديدة) — متاحة للأعضاء والأدمن
 function printReport() {
   _setReportsPrintHeader();
-  document.body.removeAttribute('data-print-section');
   showPage('reports');
   renderReports();
   setTimeout(function(){ window.print(); }, 300);
@@ -2140,20 +2147,11 @@ function printReport() {
 function printAnalytics() {
   if(currentRole!=='admin'){toast('ليس لديك صلاحية','err');return;}
   _setAnalyticsPrintHeader();
-  document.body.removeAttribute('data-print-section');
   showPage('analytics');
   renderAnalytics();
   setTimeout(function(){ window.print(); }, 300);
 }
 
-// طباعة قسم محدد من لوحة القيادة (user/prog/equip)
-function printSection(type) {
-  _setAnalyticsPrintHeader();
-  document.body.setAttribute('data-print-section', type);
-  showPage('analytics');
-  renderAnalytics();
-  setTimeout(function(){ window.print(); document.body.removeAttribute('data-print-section'); }, 300);
-}
 
 function exportExcel() {
   // متاح للأعضاء والأدمن — العضو يصدّر مهامه الخاصة فقط (listener يفلتر البيانات أصلاً)
