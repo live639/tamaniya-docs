@@ -1,6 +1,6 @@
 // sw.js  –  Thamaniya PWA Service Worker
 // IMPORTANT: bump CACHE_NAME after every deployment to force cache refresh
-const CACHE_NAME = 't8-v15';
+const CACHE_NAME = 't8-v16';
 
 const PRECACHE_URLS = [
   './',
@@ -55,8 +55,16 @@ self.addEventListener('fetch', function(event) {
   if (reqUrl.origin !== self.location.origin) return;
   if (event.request.method !== 'GET') return;
 
+  // لطلبات المستندات (index.html / navigation)، نعيد بناء الطلب مع cache:'reload'
+  // حتى لا يقدّم المتصفح نسخة HTTP-cached قديمة بدلاً من الطازج. هذا يجعل
+  // "network-first" فعلياً بدون استخدام الكاش المخفي للـHTTP في المنتصف.
+  var req = event.request;
+  if (req.destination === 'document' || req.mode === 'navigate') {
+    req = new Request(req, { cache: 'reload' });
+  }
+
   event.respondWith(
-    fetch(event.request).then(function(networkResponse) {
+    fetch(req).then(function(networkResponse) {
       if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
         var responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then(function(cache) {

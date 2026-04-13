@@ -2240,7 +2240,9 @@ if ('serviceWorker' in navigator) {
   });
 
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('./sw.js', { scope: './' })
+    // updateViaCache:'none' يجبر المتصفح على جلب sw.js طازجاً من origin بدون HTTP cache،
+    // يكشف التحديثات فوراً بدل انتظار انتهاء Cache-Control max-age من GitHub Pages.
+    navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' })
       .then(function(registration) {
         swRegistration = registration;
 
@@ -2268,23 +2270,34 @@ if ('serviceWorker' in navigator) {
 }
 
 // دالة تحديث قسرية من القائمة المنسدلة
+// المنطق: update() يطلب فحص الـSW — قد ينتج عنه installing أو waiting أو لا شيء.
+// نعالج كل حالة بشكل صريح بدل الـfallback المتعجّل الذي كان يعمل reload قبل جهوزية الـSW.
 async function forceUpdate() {
   var toastEl = document.getElementById('toast');
   if (toastEl) { toastEl.textContent = 'جاري التحديث...'; toastEl.className = 'toast show'; }
   try {
-    if (swRegistration) {
-      await swRegistration.update();
-      if (swRegistration.waiting) {
-        swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        return;
-      }
+    if (!swRegistration) { window.location.reload(); return; }
+    await swRegistration.update();
+
+    // حالة 1: في SW جاهز ومنتظر من جلسة سابقة — فعّله فوراً
+    if (swRegistration.waiting) {
+      swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      return; // controllerchange listener يعمل reload
     }
-    // لو ما فيه SW جديد: امسح الكاش وأعد التحميل
-    if ('caches' in window) {
-      var keys = await caches.keys();
-      await Promise.all(keys.map(function(k){ return caches.delete(k); }));
+
+    // حالة 2: في SW قيد التثبيت الآن — انتظره حتى state='installed' ثم فعّله
+    if (swRegistration.installing) {
+      var nw = swRegistration.installing;
+      nw.addEventListener('statechange', function(){
+        if (nw.state === 'installed') {
+          nw.postMessage({ type: 'SKIP_WAITING' });
+        }
+      });
+      return;
     }
-    setTimeout(function(){ window.location.reload(); }, 300);
+
+    // حالة 3: ما فيه تحديث متاح — التطبيق محدّث أصلاً
+    if (toastEl) { toastEl.textContent = 'التطبيق على أحدث نسخة ✓'; toastEl.className = 'toast show'; setTimeout(function(){ toastEl.classList.remove('show'); }, 2000); }
   } catch (e) {
     console.warn('forceUpdate failed', e);
     window.location.reload();
