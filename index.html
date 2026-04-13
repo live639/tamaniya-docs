@@ -871,7 +871,7 @@ function loadFromFirestore() {
     var all = snap.docs.map(function(d){return d.data();});
     S.broadcasts = currentRole === 'admin'
       ? all
-      : all.filter(function(b){ return (Array.isArray(b.executors)?b.executors:[b.by]).indexOf(currentUser) !== -1; });
+      : all.filter(function(b){ var me=normName(currentUser); return (Array.isArray(b.executors)?b.executors:[b.by]).some(function(x){return normName(x)===me;}); });
     // إشعار بالمهام الجديدة
     var lastCount = lsGet('t8_lastTaskCount') || 0;
     if(_firstBroadcastLoad && S.broadcasts.length > lastCount) {
@@ -1561,14 +1561,29 @@ function renderTasks(pf, uf) {
   var pt='<button class="tab'+(_fp==='all'?' active':'')+'" onclick="renderTasks(\'all\',undefined)">الكل ('+S.broadcasts.length+')</button>';
   S.programs.forEach(function(p){var c=S.broadcasts.filter(function(b){return b.name===p.name;}).length;pt+='<button class="tab'+(_fp===p.name?' active':'')+'" onclick="renderTasks(\''+eq(p.name)+'\',undefined)">'+p.name+' ('+c+')</button>';});
   document.getElementById('progTabs').innerHTML=pt;
-  // user tabs
-  var allU=[]; S.broadcasts.forEach(function(b){(Array.isArray(b.executors)?b.executors:[b.by]).forEach(function(e){if(e&&allU.indexOf(e)===-1)allU.push(e);});});
+  // user tabs — دمج الأسماء المكررة حسب التطبيع
+  var uMap={}; // normalized -> display name (first seen)
+  S.broadcasts.forEach(function(b){
+    var execs = Array.isArray(b.executors)?b.executors:[b.by];
+    execs.forEach(function(e){
+      if(!e) return;
+      var n = normName(e);
+      if(!uMap[n]) uMap[n] = e;
+    });
+  });
+  var allU = Object.keys(uMap);
   var ut='<button class="tab'+(_fu==='all'?' active':'')+'" onclick="renderTasks(undefined,\'all\')">الكل</button>';
-  allU.forEach(function(u){var c=S.broadcasts.filter(function(b){return(Array.isArray(b.executors)?b.executors:[b.by]).indexOf(u)!==-1;}).length;ut+='<button class="tab'+(_fu===u?' active':'')+'" onclick="renderTasks(undefined,\''+eq(u)+'\')">'+u+' ('+c+')</button>';});
+  allU.forEach(function(nKey){
+    var display = uMap[nKey];
+    var c = S.broadcasts.filter(function(b){
+      return (Array.isArray(b.executors)?b.executors:[b.by]).some(function(x){return normName(x)===nKey;});
+    }).length;
+    ut+='<button class="tab'+(_fu===nKey?' active':'')+'" onclick="renderTasks(undefined,\''+eq(nKey)+'\')">'+esc(display)+' ('+c+')</button>';
+  });
   document.getElementById('userTabs').innerHTML=ut;
   var list=S.broadcasts;
   if(_fp!=='all')list=list.filter(function(b){return b.name===_fp;});
-  if(_fu!=='all')list=list.filter(function(b){return(Array.isArray(b.executors)?b.executors:[b.by]).indexOf(_fu)!==-1;});
+  if(_fu!=='all')list=list.filter(function(b){return(Array.isArray(b.executors)?b.executors:[b.by]).some(function(x){return normName(x)===_fu;});});
   var tb=document.getElementById('btbody'),em=document.getElementById('bempty');
   if(!list.length){tb.innerHTML='';em.style.display='block';return;} em.style.display='none';
   tb.innerHTML=list.map(function(b){
@@ -1621,14 +1636,34 @@ function renderReports() {
   }
   function grp(k){return b.reduce(function(a,r){a[r[k]]=(a[r[k]]||0)+1;return a;},{});}
   mkC(grp('name'),'rptProg'); mkC(grp('type'),'rptTask');
-  var ec={};b.forEach(function(r){(Array.isArray(r.executors)?r.executors:[r.by]).forEach(function(e){if(e)ec[e]=(ec[e]||0)+1;});});
-  mkC(ec,'rptTeam');
+  // نشاط الفريق — مجموع حسب الاسم المطبّع
+  var ec={}, ecDisplay={};
+  b.forEach(function(r){
+    (Array.isArray(r.executors)?r.executors:[r.by]).forEach(function(e){
+      if(!e) return;
+      var n=normName(e);
+      ec[n]=(ec[n]||0)+1;
+      if(!ecDisplay[n]) ecDisplay[n]=e;
+    });
+  });
+  var ecOut={};
+  Object.keys(ec).forEach(function(k){ ecOut[ecDisplay[k]]=ec[k]; });
+  mkC(ecOut,'rptTeam');
   var mo={};b.forEach(function(r){if(r.date){var m=r.date.slice(0,7);mo[m]=(mo[m]||0)+1;}});
   mkC(Object.fromEntries(Object.entries(mo).sort(function(a,c){return c[0].localeCompare(a[0]);}).slice(0,8)),'rptMonth');
-  // user tabs
-  var au=[];b.forEach(function(r){(Array.isArray(r.executors)?r.executors:[r.by]).forEach(function(e){if(e&&au.indexOf(e)===-1)au.push(e);});});
+  // user tabs — مدموجة حسب التطبيع
+  var auMap={};
+  b.forEach(function(r){
+    (Array.isArray(r.executors)?r.executors:[r.by]).forEach(function(e){
+      if(!e) return;
+      var n=normName(e);
+      if(!auMap[n]) auMap[n]=e;
+    });
+  });
   var rut='<button class="tab'+(_ru==='all'?' active':'')+'" onclick="fRU(\'all\')">الكل ('+b.length+')</button>';
-  au.forEach(function(u){rut+='<button class="tab'+(_ru===u?' active':'')+'" onclick="fRU(\''+eq(u)+'\')">'+u+'</button>';});
+  Object.keys(auMap).forEach(function(nKey){
+    rut+='<button class="tab'+(_ru===nKey?' active':'')+'" onclick="fRU(\''+eq(nKey)+'\')">'+esc(auMap[nKey])+'</button>';
+  });
   document.getElementById('rptUserTabs').innerHTML=rut; fRU(_ru,false);
   // prog tabs
   var ap=[];b.forEach(function(r){if(r.name&&ap.indexOf(r.name)===-1)ap.push(r.name);});
@@ -1658,8 +1693,8 @@ function renderReports() {
 
 function fRU(u,s) {
   _ru=u;
-  if(!s)document.querySelectorAll('#rptUserTabs .tab').forEach(function(t){t.classList.toggle('active',(u==='all'&&t.textContent.startsWith('الكل'))||t.textContent.trim()===u);});
-  var list=u==='all'?S.broadcasts:S.broadcasts.filter(function(b){return(Array.isArray(b.executors)?b.executors:[b.by]).indexOf(u)!==-1;});
+  if(!s)document.querySelectorAll('#rptUserTabs .tab').forEach(function(t){t.classList.toggle('active',(u==='all'&&t.textContent.startsWith('الكل'))||normName(t.textContent.trim())===u);});
+  var list=u==='all'?S.broadcasts:S.broadcasts.filter(function(b){return(Array.isArray(b.executors)?b.executors:[b.by]).some(function(x){return normName(x)===u;});});
   document.getElementById('rptUserTitle').textContent=u==='all'?'كل المهام':'مهام: '+u;
   document.getElementById('rptUserCount').textContent=list.length+' مهمة';
   var tb=document.getElementById('rptUserBody'),em=document.getElementById('rptUserEmpty');
@@ -1728,6 +1763,18 @@ document.addEventListener('click', function(e) {
 function filterTbl(q,id){document.querySelectorAll('#'+id+' tr').forEach(function(r){r.style.display=r.textContent.toLowerCase().indexOf(q.toLowerCase())!==-1?'':'none';});}
 function eq(s){return s.replace(/'/g,"\\'").replace(/"/g,'&quot;');}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// تطبيع الاسم: يوحّد الكتابات المختلفة لنفس الشخص
+function normName(s){
+  if(!s) return '';
+  return s
+    .replace(/[\u0640]/g,'')
+    .replace(/[\u200B-\u200F\uFEFF]/g,'')
+    .replace(/[إأآا]/g,'ا')
+    .replace(/ى/g,'ي')
+    .replace(/ة/g,'ه')
+    .replace(/\s+/g,' ')
+    .trim();
+}
 
 function printReport() {
   if(currentRole!=='admin'){toast('ليس لديك صلاحية','err');return;}
